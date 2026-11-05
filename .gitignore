@@ -1,0 +1,24 @@
+# Build and caches
+*.iml
+.DS_Store
+*.hprof
+.externalNativeBuild
+.cxx
+
+# Gradle
+.gradle
+**/.gradle/
+build/
+**/build/
+
+# IDE
+.idea/
+**/.idea/
+.kotlin/
+**/.kotlin/
+
+# Local sensitive properties
+local.properties
+**/local.properties
+captures/
+**/captures/
