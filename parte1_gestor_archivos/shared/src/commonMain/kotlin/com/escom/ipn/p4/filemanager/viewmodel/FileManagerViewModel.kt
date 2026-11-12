@@ -1,8 +1,20 @@
 package com.escom.ipn.p4.filemanager.viewmodel
 
 import com.escom.ipn.p4.filemanager.model.AppColorTheme
+import com.escom.ipn.p4.filemanager.model.BiometricAuthResult
+import com.escom.ipn.p4.filemanager.model.BluetoothPeerDevice
 import com.escom.ipn.p4.filemanager.model.FileItem
+import com.escom.ipn.p4.filemanager.model.FileTransferMetadataPacket
+import com.escom.ipn.p4.filemanager.model.FileTransferRecord
+import com.escom.ipn.p4.filemanager.model.HttpProxyResponse
+import com.escom.ipn.p4.filemanager.model.IBiometricAuthService
+import com.escom.ipn.p4.filemanager.model.ISensorManager
+import com.escom.ipn.p4.filemanager.model.MotionTiltState
+import com.escom.ipn.p4.filemanager.model.SensorData
+import com.escom.ipn.p4.filemanager.model.SensorType
+import com.escom.ipn.p4.filemanager.model.WebCacheRecord
 import com.escom.ipn.p4.filemanager.repository.IFileManagerRepository
+import com.escom.ipn.p4.filemanager.service.IBluetoothTransferService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,11 +42,38 @@ data class FileManagerUiState(
     val errorMessage: String? = null,
     val statusMessage: String? = null,
     val colorTheme: AppColorTheme = AppColorTheme.GUINDA_IPN,
-    val isDarkThemeForced: Boolean? = null // null means system default
+    val isDarkThemeForced: Boolean? = null,
+
+    // Ejercicio 1: Telemetría de Sensores y Biometría
+    val sensorDataAccel: SensorData = SensorData(SensorType.ACCELEROMETER),
+    val sensorDataGyro: SensorData = SensorData(SensorType.GYROSCOPE),
+    val isSensorSimulationEnabled: Boolean = false,
+    val tiltState: MotionTiltState = MotionTiltState(),
+    val showSensorTelemetryDialog: Boolean = false,
+    val isVaultUnlocked: Boolean = false,
+
+    // Ejercicio 2: Transferencia Bluetooth
+    val showBluetoothTransferDialog: Boolean = false,
+    val selectedFileForTransfer: FileItem? = null,
+    val bluetoothDevices: List<BluetoothPeerDevice> = emptyList(),
+    val connectedPeer: BluetoothPeerDevice? = null,
+    val activeTransfer: FileTransferRecord? = null,
+    val transferHistory: List<FileTransferRecord> = emptyList(),
+    val pendingIncomingOffer: FileTransferMetadataPacket? = null,
+
+    // Ejercicio 3: Consulta Web Proxy por Bluetooth
+    val showWebProxyDialog: Boolean = false,
+    val proxyUrlInput: String = "https://jsonplaceholder.typicode.com/posts/1",
+    val lastProxyResponse: HttpProxyResponse? = null,
+    val webCacheRecords: List<WebCacheRecord> = emptyList(),
+    val isProxyLoading: Boolean = false
 )
 
 class FileManagerViewModel(
     private val repository: IFileManagerRepository,
+    private val sensorManager: ISensorManager? = null,
+    private val biometricService: IBiometricAuthService? = null,
+    private val bluetoothService: IBluetoothTransferService? = null,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main)
 ) {
 
@@ -45,6 +84,79 @@ class FileManagerViewModel(
 
     init {
         initializeRoots()
+        bindSensorFlows()
+        bindBluetoothFlows()
+    }
+
+    private fun bindSensorFlows() {
+        sensorManager?.let { sm ->
+            coroutineScope.launch {
+                sm.accelerometerFlow.collect { data ->
+                    _uiState.update { it.copy(sensorDataAccel = data) }
+                }
+            }
+            coroutineScope.launch {
+                sm.gyroscopeFlow.collect { data ->
+                    _uiState.update { it.copy(sensorDataGyro = data) }
+                }
+            }
+            coroutineScope.launch {
+                sm.shakeEventFlow.collect { timestamp ->
+                    if (timestamp > 0L) {
+                        refreshCurrentDirectory()
+                        _uiState.update {
+                            it.copy(statusMessage = "¡Gesto de agitación (Shake) detectado! Directorio actualizado.")
+                        }
+                    }
+                }
+            }
+            coroutineScope.launch {
+                sm.tiltStateFlow.collect { tilt ->
+                    _uiState.update { it.copy(tiltState = tilt) }
+                }
+            }
+            sm.startListening(60L)
+        }
+    }
+
+    private fun bindBluetoothFlows() {
+        bluetoothService?.let { bt ->
+            coroutineScope.launch {
+                bt.bondedDevicesFlow.collect { devs ->
+                    _uiState.update { it.copy(bluetoothDevices = devs) }
+                }
+            }
+            coroutineScope.launch {
+                bt.connectedPeerFlow.collect { peer ->
+                    _uiState.update { it.copy(connectedPeer = peer) }
+                }
+            }
+            coroutineScope.launch {
+                bt.activeTransferFlow.collect { act ->
+                    _uiState.update { it.copy(activeTransfer = act) }
+                }
+            }
+            coroutineScope.launch {
+                bt.transferHistoryFlow.collect { hist ->
+                    _uiState.update { it.copy(transferHistory = hist) }
+                }
+            }
+            coroutineScope.launch {
+                bt.pendingIncomingOfferFlow.collect { offer ->
+                    _uiState.update { it.copy(pendingIncomingOffer = offer) }
+                }
+            }
+            coroutineScope.launch {
+                bt.proxyResponseFlow.collect { res ->
+                    _uiState.update { it.copy(lastProxyResponse = res, isProxyLoading = false) }
+                }
+            }
+            coroutineScope.launch {
+                bt.webCacheFlow.collect { cache ->
+                    _uiState.update { it.copy(webCacheRecords = cache) }
+                }
+            }
+        }
     }
 
     fun initializeRoots() {
@@ -321,5 +433,186 @@ class FileManagerViewModel(
 
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null, statusMessage = null) }
+    }
+
+    // ==========================================
+    // EJERCICIO 1: SENSORES Y BIOMETRÍA
+    // ==========================================
+
+    fun openSensorTelemetryDialog() {
+        sensorManager?.startListening(60L)
+        _uiState.update { it.copy(showSensorTelemetryDialog = true) }
+    }
+
+    fun closeSensorTelemetryDialog() {
+        _uiState.update { it.copy(showSensorTelemetryDialog = false) }
+    }
+
+    fun toggleSensorSimulation() {
+        val next = !_uiState.value.isSensorSimulationEnabled
+        sensorManager?.setSimulationMode(next)
+        _uiState.update { it.copy(isSensorSimulationEnabled = next) }
+    }
+
+    fun injectSimulatedSensorReading(type: SensorType, x: Float, y: Float, z: Float) {
+        sensorManager?.injectSimulatedReading(type, x, y, z)
+    }
+
+    fun unlockVaultWithBiometrics(onSuccess: () -> Unit = {}) {
+        val bio = biometricService
+        if (bio == null) {
+            _uiState.update { it.copy(isVaultUnlocked = true, statusMessage = "Bóveda abierta en modo simulación.") }
+            onSuccess()
+            return
+        }
+
+        coroutineScope.launch {
+            val result = bio.authenticate(
+                title = "Acceso a Bóveda Protegida",
+                subtitle = "Autenticación Biométrica IPN-ESCOM",
+                description = "Confirme su identidad con huella dactilar o PIN del dispositivo para ver archivos confidenciales."
+            )
+            when (result) {
+                BiometricAuthResult.SUCCESS, BiometricAuthResult.DEVICE_CREDENTIAL_SUCCESS -> {
+                    _uiState.update {
+                        it.copy(isVaultUnlocked = true, statusMessage = "Autenticación biométrica exitosa. Bóveda desbloqueada.")
+                    }
+                    onSuccess()
+                }
+                BiometricAuthResult.CANCELED -> {
+                    _uiState.update { it.copy(statusMessage = "Operación biométrica cancelada.") }
+                }
+                BiometricAuthResult.NOT_AVAILABLE -> {
+                    _uiState.update {
+                        it.copy(isVaultUnlocked = true, statusMessage = "Biometría no configurada; accediendo con credencial segura.")
+                    }
+                    onSuccess()
+                }
+                BiometricAuthResult.FAILED -> {
+                    _uiState.update { it.copy(errorMessage = "Huella no reconocida. Acceso denegado a la bóveda.") }
+                }
+            }
+        }
+    }
+
+    fun lockVault() {
+        _uiState.update { it.copy(isVaultUnlocked = false, statusMessage = "Bóveda protegida bloqueada.") }
+    }
+
+    // ==========================================
+    // EJERCICIO 2: TRANSFERENCIA POR BLUETOOTH
+    // ==========================================
+
+    fun openBluetoothTransferDialog(item: FileItem? = null) {
+        bluetoothService?.refreshDevices()
+        _uiState.update {
+            it.copy(
+                showBluetoothTransferDialog = true,
+                selectedFileForTransfer = item
+            )
+        }
+    }
+
+    fun closeBluetoothTransferDialog() {
+        _uiState.update {
+            it.copy(
+                showBluetoothTransferDialog = false,
+                selectedFileForTransfer = null
+            )
+        }
+    }
+
+    fun connectToBluetoothDevice(device: BluetoothPeerDevice) {
+        bluetoothService?.connectToDevice(device)
+    }
+
+    fun sendFileViaBluetooth(fileItem: FileItem, device: BluetoothPeerDevice) {
+        val bt = bluetoothService ?: return
+        coroutineScope.launch {
+            val textContent = repository.readFileText(fileItem.path).getOrNull() ?: ""
+            val bytes = textContent.encodeToByteArray()
+            val result = bt.sendFile(device, fileItem.name, fileItem.mimeType, bytes)
+            result.fold(
+                onSuccess = { record ->
+                    _uiState.update {
+                        it.copy(statusMessage = "Transferencia de '${record.fileName}' iniciada hacia ${device.name}.")
+                    }
+                },
+                onFailure = { err ->
+                    _uiState.update {
+                        it.copy(errorMessage = "Error al enviar archivo por Bluetooth: ${err.message}")
+                    }
+                }
+            )
+        }
+    }
+
+    fun simulateBluetoothTransfer(fileItem: FileItem) {
+        coroutineScope.launch {
+            val textContent = repository.readFileText(fileItem.path).getOrNull() ?: "Demo KMP File"
+            bluetoothService?.simulateTransfer(fileItem.name, fileItem.mimeType, textContent.encodeToByteArray(), asSender = true)
+            _uiState.update {
+                it.copy(statusMessage = "Simulando envío por bloques de '${fileItem.name}'...")
+            }
+        }
+    }
+
+    fun acceptIncomingTransfer() {
+        coroutineScope.launch {
+            bluetoothService?.acceptIncomingTransfer()?.fold(
+                onSuccess = {
+                    refreshCurrentDirectory()
+                    _uiState.update { it.copy(statusMessage = "Archivo recibido e integridad SHA-256 verificada con éxito.") }
+                },
+                onFailure = { err ->
+                    _uiState.update { it.copy(errorMessage = "Fallo en recepción: ${err.message}") }
+                }
+            )
+        }
+    }
+
+    fun rejectIncomingTransfer() {
+        bluetoothService?.rejectIncomingTransfer()
+        _uiState.update { it.copy(statusMessage = "Transferencia entrante rechazada.") }
+    }
+
+    fun cancelActiveTransfer() {
+        bluetoothService?.cancelActiveTransfer()
+        _uiState.update { it.copy(statusMessage = "Transferencia cancelada.") }
+    }
+
+    // ==========================================
+    // EJERCICIO 3: CONSULTA WEB POR BLUETOOTH
+    // ==========================================
+
+    fun openWebProxyDialog() {
+        _uiState.update { it.copy(showWebProxyDialog = true) }
+    }
+
+    fun closeWebProxyDialog() {
+        _uiState.update { it.copy(showWebProxyDialog = false) }
+    }
+
+    fun executeWebProxyRequest(url: String) {
+        val bt = bluetoothService ?: return
+        coroutineScope.launch {
+            _uiState.update { it.copy(isProxyLoading = true, proxyUrlInput = url) }
+            val response = bt.sendProxyRequest(url)
+            _uiState.update {
+                it.copy(
+                    isProxyLoading = false,
+                    lastProxyResponse = response,
+                    statusMessage = if (response.fromCache)
+                        "Respuesta cargada desde la memoria caché local (Offline)."
+                    else
+                        "Respuesta remota recibida a través del Gateway Bluetooth."
+                )
+            }
+        }
+    }
+
+    fun clearWebProxyCache() {
+        bluetoothService?.clearCache()
+        _uiState.update { it.copy(statusMessage = "Caché de consultas web vaciada con éxito.") }
     }
 }
