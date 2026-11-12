@@ -17,15 +17,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.ui.geometry.Offset
+import com.escom.ipn.p4.filemanager.ui.components.BiometricVaultDialog
+import com.escom.ipn.p4.filemanager.ui.components.BluetoothTransferDialog
+import com.escom.ipn.p4.filemanager.ui.components.SensorTelemetryDialog
+import com.escom.ipn.p4.filemanager.ui.components.WebProxyDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -85,6 +94,7 @@ fun FileManagerScreen(
     var itemForDelete by remember { mutableStateOf<FileItem?>(null) }
     var showCreateFolderDialog by remember { mutableStateOf(false) }
     var showCreateFileDialog by remember { mutableStateOf(false) }
+    var showBiometricVaultDialog by remember { mutableStateOf(false) }
 
     // Notificaciones Snackbar
     LaunchedEffect(state.statusMessage, state.errorMessage) {
@@ -146,6 +156,26 @@ fun FileManagerScreen(
                         IconButton(onClick = { isSearchActive = true }) {
                             Icon(Icons.Default.Search, contentDescription = "Buscar")
                         }
+                    }
+
+                    // Ejercicio 1: Telemetría de Sensores
+                    IconButton(onClick = { viewModel.openSensorTelemetryDialog() }) {
+                        Icon(Icons.Default.Sensors, contentDescription = "Sensores e Interacción")
+                    }
+
+                    // Ejercicio 2: Transferencia Bluetooth
+                    IconButton(onClick = { viewModel.openBluetoothTransferDialog() }) {
+                        Icon(Icons.Default.Bluetooth, contentDescription = "Transferencia Bluetooth")
+                    }
+
+                    // Ejercicio 3: Consulta Web Proxy por Bluetooth
+                    IconButton(onClick = { viewModel.openWebProxyDialog() }) {
+                        Icon(Icons.Default.Language, contentDescription = "Consulta Web Proxy")
+                    }
+
+                    // Bóveda Biométrica
+                    IconButton(onClick = { showBiometricVaultDialog = true }) {
+                        Icon(Icons.Default.Fingerprint, contentDescription = "Bóveda Protegida")
                     }
 
                     // Selector de tema institucional
@@ -339,7 +369,8 @@ fun FileManagerScreen(
                                 onMove = {
                                     viewModel.moveItem(item, state.currentPath)
                                 },
-                                onDetails = { itemForDetails = item }
+                                onDetails = { itemForDetails = item },
+                                onBluetoothSend = { viewModel.openBluetoothTransferDialog(item) }
                             )
                         }
                     }
@@ -400,7 +431,60 @@ fun FileManagerScreen(
         FileViewerSheet(
             item = file,
             content = state.viewingContent,
+            tiltPanOffset = Offset(state.tiltState.panOffsetX, state.tiltState.panOffsetY),
             onDismiss = { viewModel.closeFileViewer() }
+        )
+    }
+
+    // Diálogos de Práctica 6 (Sensores, Bluetooth, Proxy Web, Biometría)
+    if (state.showSensorTelemetryDialog) {
+        SensorTelemetryDialog(
+            accelData = state.sensorDataAccel,
+            gyroData = state.sensorDataGyro,
+            tiltState = state.tiltState,
+            isSimulationMode = state.isSensorSimulationEnabled,
+            onToggleSimulation = { viewModel.toggleSensorSimulation() },
+            onInjectSimulated = { type, x, y, z -> viewModel.injectSimulatedSensorReading(type, x, y, z) },
+            onDismiss = { viewModel.closeSensorTelemetryDialog() }
+        )
+    }
+
+    if (state.showBluetoothTransferDialog) {
+        BluetoothTransferDialog(
+            selectedFile = state.selectedFileForTransfer,
+            devices = state.bluetoothDevices,
+            connectedPeer = state.connectedPeer,
+            activeTransfer = state.activeTransfer,
+            transferHistory = state.transferHistory,
+            pendingOffer = state.pendingIncomingOffer,
+            onConnectDevice = { viewModel.connectToBluetoothDevice(it) },
+            onSendFile = { file, dev -> viewModel.sendFileViaBluetooth(file, dev) },
+            onSimulateTransfer = { file -> viewModel.simulateBluetoothTransfer(file) },
+            onAcceptIncoming = { viewModel.acceptIncomingTransfer() },
+            onRejectIncoming = { viewModel.rejectIncomingTransfer() },
+            onCancelTransfer = { viewModel.cancelActiveTransfer() },
+            onDismiss = { viewModel.closeBluetoothTransferDialog() }
+        )
+    }
+
+    if (state.showWebProxyDialog) {
+        WebProxyDialog(
+            initialUrl = state.proxyUrlInput,
+            lastResponse = state.lastProxyResponse,
+            cacheRecords = state.webCacheRecords,
+            isLoading = state.isProxyLoading,
+            onExecuteRequest = { viewModel.executeWebProxyRequest(it) },
+            onClearCache = { viewModel.clearWebProxyCache() },
+            onDismiss = { viewModel.closeWebProxyDialog() }
+        )
+    }
+
+    if (showBiometricVaultDialog) {
+        BiometricVaultDialog(
+            isUnlocked = state.isVaultUnlocked,
+            onUnlock = { viewModel.unlockVaultWithBiometrics() },
+            onLock = { viewModel.lockVault() },
+            onDismiss = { showBiometricVaultDialog = false }
         )
     }
 }

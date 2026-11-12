@@ -87,6 +87,7 @@ import java.io.File
 fun FileViewerSheet(
     item: FileItem,
     content: String?,
+    tiltPanOffset: Offset = Offset.Zero,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -164,7 +165,7 @@ fun FileViewerSheet(
                             PlainTextViewer(text = content ?: "(Archivo vacío)")
                         }
                         FileCategory.IMAGE -> {
-                            ImageViewerWithZoom(imagePath = item.path)
+                            ImageViewerWithZoom(imagePath = item.path, tiltPanOffset = tiltPanOffset)
                         }
                         else -> {
                             UnsupportedFormatView(item = item, onShare = { shareFile(context, item) })
@@ -272,7 +273,10 @@ fun PlainTextViewer(text: String) {
 }
 
 @Composable
-fun ImageViewerWithZoom(imagePath: String) {
+fun ImageViewerWithZoom(
+    imagePath: String,
+    tiltPanOffset: Offset = Offset.Zero
+) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var rotation by remember { mutableFloatStateOf(0f) }
@@ -352,6 +356,9 @@ fun ImageViewerWithZoom(imagePath: String) {
             contentAlignment = Alignment.Center
         ) {
             if (bitmap != null) {
+                val effectiveOffsetX = offset.x + if (scale > 1.2f) tiltPanOffset.x else 0f
+                val effectiveOffsetY = offset.y + if (scale > 1.2f) tiltPanOffset.y else 0f
+
                 Image(
                     bitmap = bitmap.asImageBitmap(),
                     contentDescription = "Visualizador de imagen interactivo",
@@ -359,8 +366,8 @@ fun ImageViewerWithZoom(imagePath: String) {
                         .graphicsLayer(
                             scaleX = scale,
                             scaleY = scale,
-                            translationX = offset.x,
-                            translationY = offset.y,
+                            translationX = effectiveOffsetX,
+                            translationY = effectiveOffsetY,
                             rotationZ = rotation
                         )
                 )

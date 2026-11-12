@@ -1,7 +1,6 @@
 package com.escom.ipn.p4.filemanager
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,19 +10,30 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.FragmentActivity
 import com.escom.ipn.p4.filemanager.repository.AndroidFileManagerRepository
+import com.escom.ipn.p4.filemanager.service.AndroidBiometricAuthService
+import com.escom.ipn.p4.filemanager.service.AndroidBluetoothService
+import com.escom.ipn.p4.filemanager.service.AndroidSensorManager
 import com.escom.ipn.p4.filemanager.ui.FileManagerScreen
 import com.escom.ipn.p4.filemanager.ui.theme.FileManagerTheme
 import com.escom.ipn.p4.filemanager.viewmodel.FileManagerViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
+    private var sensorManager: AndroidSensorManager? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        val sm = AndroidSensorManager(applicationContext)
+        sensorManager = sm
+        val bio = AndroidBiometricAuthService(applicationContext) { this }
+        val bt = AndroidBluetoothService(applicationContext)
+
         setContent {
             val repository = remember { AndroidFileManagerRepository(applicationContext) }
-            val viewModel = remember { FileManagerViewModel(repository) }
+            val viewModel = remember { FileManagerViewModel(repository, sm, bio, bt) }
             val state by viewModel.uiState.collectAsState()
 
             // Manejo de navegación atrás hacia la carpeta padre
@@ -37,5 +47,15 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        sensorManager?.startListening(60L)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager?.stopListening()
     }
 }
