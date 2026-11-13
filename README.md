@@ -210,23 +210,31 @@ En la **Parte 2 (Cyber Breach / Net Strike)**, se integra un modo multijugador l
 
 ---
 
-## 📸 Guía de Evidencias y Capturas
+## 📸 Guía de Evidencias y Capturas (Dispositivo Físico Samsung Galaxy A54)
 
-Para la entrega formal y la evaluación técnica, se recomienda capturar las siguientes pantallas ejecutando las aplicaciones en el dispositivo físico **Samsung Galaxy A54**:
+Para la entrega formal y la evaluación técnica, se integran las evidencias obtenidas ejecutando las aplicaciones en el dispositivo físico **Samsung Galaxy A54**:
 
 ### Parte 1: Gestor de Archivos Multiplataforma
-1. **Telemetría de Sensores en Vivo:** Diálogo modal mostrando los ejes $X,Y,Z$ del acelerómetro ($m/s^2$) y giroscopio ($rad/s$), timestamp y botones de simulación.
-2. **Visor de Imágenes con Tilt-to-Pan:** Visualización de una imagen con el indicador de inclinación y desplazamiento activo por giroscopio.
-3. **Bóveda Segura y Biometría:** Prompt biométrico nativo solicitando huella dactilar/PIN y vista de archivos confidenciales desbloqueados.
-4. **Transferencia Bluetooth en Curso:** Diálogo modal de transferencia mostrando la barra de progreso porcentual, fragmentos 4 KB transferidos y botón de cancelación.
-5. **Recepción con Verificación SHA-256:** Diálogo de solicitud entrante con el hash SHA-256 e historial de transferencias con estado `COMPLETED`.
-6. **Visor de Proxy Relay Web:** Dispositivo B en Modo Avión visualizando respuesta JSON de `jsonplaceholder` o `pokeapi` a través del enlace Bluetooth.
+
+| Caso Evaluado | Captura de Pantalla Real (Samsung Galaxy A54) | Descripción Técnica del Comportamiento |
+| :--- | :---: | :--- |
+| **Giroscopio & Tilt-to-Pan (HUD Inclinación)** | <img src="docs/capturas/parte1/02_visor_imagen_inclinacion_hud.jpg" width="220" alt="HUD Telemetría Inclinación" /> | Visor de imagen con telemetría en vivo, burbuja de nivel 2D, badge `[ACTIVO]` en verde y cálculo en tiempo real de Pitch, Roll y Offset de paneo al inclinar el teléfono. |
+| **Bóveda Segura & Biometría (Acceso)** | <img src="docs/capturas/parte1/boveda_protegida_acceso_autorizado_archivos.jpg" width="220" alt="Bóveda Desbloqueada" /> | Desbloqueo exitoso de la bóveda mediante autenticación biométrica (`BiometricPrompt` con huella dactilar/PIN). |
+| **Bóveda Segura (Archivos Protegidos)** | <img src="docs/capturas/parte1/boveda_protegida_archivos.jpg" width="220" alt="Archivos Bóveda" /> | Exploración autorizada de archivos confidenciales resguardados en almacenamiento privado con cifrado en memoria. |
+| **Transferencia Bluetooth & Compatibilidad** | <img src="docs/capturas/parte1/03_bluetooth_seleccion_archivo_iphone_incompatible.jpg" width="220" alt="Selección Bluetooth" /> | Menú con chips limpios `[Imagen]`, `[Archivo 1]`, `[Archivo 2]`, validación de dispositivos detectados y reporte de compatibilidad de pares. |
+| **Recepción de Archivos por Bluetooth** | <img src="docs/capturas/parte1/05_bluetooth_recepcion_archivos.jpg" width="220" alt="Recepción Bluetooth" /> | Solicitud entrante con nombre de archivo, metadatos y diálogo modal de aceptación explícita previo a la transmisión. |
+| **Historial de Transferencias & SHA-256** | <img src="docs/capturas/parte1/05_bluetooth_historial_completado.jpg" width="220" alt="Historial Transferencias" /> | Registro histórico con archivo transferido, tamaño, estado `EXITOSO`, marca de tiempo y verificación íntegra del hash SHA-256. |
+| **Proxy Relay Web (Menú de Selección)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_menu.jpg" width="220" alt="Menú Proxy Relay" /> | Diálogo de consulta web vía Bluetooth proxy relay con chips de presets (`Posts`, `Hora CDMX`, `PokeAPI`). |
+| **Proxy Relay Web (Respuesta Posts JSON)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_posts.jpg" width="220" alt="Respuesta Posts" /> | Recepción de payload JSON desde endpoint REST a través del salto proxy Bluetooth sin conexión directa a internet. |
+| **Proxy Relay Web (Respuesta PokeAPI)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_pokeapi.jpg" width="220" alt="Respuesta PokeAPI" /> | Respuesta HTTP 200 OK con payload de API pública retransmitido íntegramente por el enlace Bluetooth local. |
+| **Mitigación SSRF (IP Privada Prohibida)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_ipprivada_prohibida.jpg" width="220" alt="Protección SSRF" /> | Mecanismo de seguridad que rechaza de forma estricta peticiones dirigidas a IPs privadas o locales (prevención SSRF). |
 
 ### Parte 2: Videojuego Cyber Breach
-7. **Lobby Multijugador Bluetooth:** Diálogo de selección de rol (Hospedar / Unirse) con el listado de dispositivos vinculados.
-8. **Banner de Turno Sincronizado 1v1:** Tablero táctico 8×8 con el banner superior `🟢 ¡TU TURNO DE ATACAR!` y estado del oponente.
-9. **Mira Cinética de Giroscopio en Cuadrícula:** Celda destacada con retícula cian en la cuadrícula enemiga y coordenadas activas en el HUD.
-10. **Recarga Cinética por Agitación:** Notificación en el HUD de `¡Recarga Cinética por Agitación! +5 EN` y temporizador de enfriamiento decreciente.
+*(Capturas correspondientes al ciberduelo multijugador Bluetooth 1v1 y sensores en combate en proceso de integración)*
+1. **Lobby Multijugador Bluetooth:** Diálogo de selección de rol (Hospedar / Unirse) con el listado de dispositivos vinculados.
+2. **Banner de Turno Sincronizado 1v1:** Tablero táctico 8×8 con el banner superior `🟢 ¡TU TURNO DE ATACAR!` y estado del oponente.
+3. **Mira Cinética de Giroscopio en Cuadrícula:** Celda destacada con retícula cian en la cuadrícula enemiga y coordenadas activas en el HUD.
+4. **Recarga Cinética por Agitación:** Notificación en el HUD de `¡Recarga Cinética por Agitación! +5 EN` y temporizador de enfriamiento decreciente.
 
 ---
 

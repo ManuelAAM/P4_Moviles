@@ -209,23 +209,31 @@ In **Part 2 (Cyber Breach / Net Strike)**, a real-time turn-based multiplayer mo
 
 ---
 
-## 📸 Evidence & Screenshots Guide
+## 📸 Evidence & Screenshots Guide (Physical Samsung Galaxy A54 Device)
 
-For physical hardware submission on a **Samsung Galaxy A54**, capture the following 10 screens:
+Actual testing screenshots captured on physical hardware (**Samsung Galaxy A54**):
 
 ### Part 1: Multiplatform File Manager
-1. **Live Sensor Telemetry:** Modal dialog displaying Accelerometer ($m/s^2$) and Gyroscope ($rad/s$) telemetry, timestamp, and test buttons.
-2. **Tilt-to-Pan Image Viewer:** Image viewer actively translating viewport based on phone tilt.
-3. **Biometric Vault Challenge:** Native `BiometricPrompt` fingerprint dialog and unlocked confidential vault files.
-4. **Bluetooth Transfer in Progress:** Transfer dialog showing chunk progress bar, byte counts, and cancel button.
-5. **SHA-256 Verification & History:** Incoming request modal with expected SHA-256 hash and transfer history showing `COMPLETED`.
-6. **Web Proxy Relay Viewer:** Device B in Airplane Mode rendering a JSON API response received over Bluetooth.
+
+| Test Case | Screenshot (Samsung Galaxy A54) | Technical Description |
+| :--- | :---: | :--- |
+| **Gyroscope & Tilt-to-Pan (HUD Telemetry)** | <img src="docs/capturas/parte1/02_visor_imagen_inclinacion_hud.jpg" width="220" alt="HUD Tilt Telemetry" /> | Real-time image viewer with 2D level bubble, green `[ACTIVO]` badge, and dynamic Pitch, Roll, and pan offset calculations on physical device tilt. |
+| **Secure Vault & Biometrics (Authorized)** | <img src="docs/capturas/parte1/boveda_protegida_acceso_autorizado_archivos.jpg" width="220" alt="Unlocked Vault" /> | Successful vault unlock using native `BiometricPrompt` (fingerprint / device PIN). |
+| **Secure Vault (Protected Files)** | <img src="docs/capturas/parte1/boveda_protegida_archivos.jpg" width="220" alt="Vault Files" /> | Authorized listing of confidential files isolated inside app-private internal storage. |
+| **Bluetooth Transfer & Compatibility** | <img src="docs/capturas/parte1/03_bluetooth_seleccion_archivo_iphone_incompatible.jpg" width="220" alt="Bluetooth Selection" /> | Clean file selection chips `[Imagen]`, `[Archivo 1]`, `[Archivo 2]` with device detection and peer compatibility evaluation. |
+| **Incoming Bluetooth File Reception** | <img src="docs/capturas/parte1/05_bluetooth_recepcion_archivos.jpg" width="220" alt="Bluetooth Reception" /> | Incoming transfer challenge with file metadata and explicit acceptance modal dialog before streaming. |
+| **Transfer History & SHA-256 Verification** | <img src="docs/capturas/parte1/05_bluetooth_historial_completado.jpg" width="220" alt="Transfer History" /> | Historical log displaying transferred file, byte size, `EXITOSO` status, timestamp, and mathematical SHA-256 integrity match. |
+| **Web Proxy Relay (Selection Menu)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_menu.jpg" width="220" alt="Proxy Relay Menu" /> | Bluetooth web proxy relay dialog with preset endpoint chips (`Posts`, `Hora CDMX`, `PokeAPI`). |
+| **Web Proxy Relay (Posts JSON Response)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_posts.jpg" width="220" alt="Posts Response" /> | JSON REST payload received via Bluetooth proxy hop while completely isolated from the internet. |
+| **Web Proxy Relay (PokeAPI Response)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_pokeapi.jpg" width="220" alt="PokeAPI Response" /> | HTTP 200 OK response from public API forwarded intact over the local Bluetooth link. |
+| **SSRF Mitigation (Private IP Blocked)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_ipprivada_prohibida.jpg" width="220" alt="SSRF Protection" /> | Strict security enforcement rejecting requests targeting private/internal network addresses (SSRF prevention). |
 
 ### Part 2: Cyber Breach Video Game
-7. **Bluetooth Multiplayer Lobby:** Role selection dialog (Host / Join) with paired Bluetooth devices list.
-8. **1v1 Synchronized Turn Banner:** 8×8 grid showing top HUD banner `🟢 YOUR TURN TO STRIKE!` and opponent status.
-9. **Gyroscope Aiming Reticle:** Cyan crosshair highlight on targeted enemy grid cell with coordinates in HUD.
-10. **Kinetic Shake Recharge:** HUD indicator displaying `Kinetic Recharge: +5 EN` and active 15s cooldown timer.
+*(Screenshots for 1v1 Bluetooth duel and combat sensor controls in staging)*
+1. **Bluetooth Multiplayer Lobby:** Role selection dialog (Host / Join) with paired Bluetooth devices list.
+2. **1v1 Synchronized Turn Banner:** 8×8 grid showing top HUD banner `🟢 YOUR TURN TO STRIKE!` and opponent status.
+3. **Gyroscope Aiming Reticle:** Cyan crosshair highlight on targeted enemy grid cell with coordinates in HUD.
+4. **Kinetic Shake Recharge:** HUD indicator displaying `Kinetic Recharge: +5 EN` and active 15s cooldown timer.
 
 ---
 
