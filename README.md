@@ -6,14 +6,14 @@
 <br/>
 
 ## **Desarrollo de Aplicaciones Móviles Nativas**
-### **Práctica 4: Gestión de archivos multiplataforma (Android e iOS)**
-#### **Tecnología Implementada: Kotlin Multiplatform (KMP) + Jetpack Compose**
+### **Práctica 6: Manejo de sensores del dispositivo móvil**
+#### **Kotlin Multiplatform (KMP) + Jetpack Compose + Sensores de Hardware + Bluetooth RFCOMM P2P**
 
 ---
 
 **Profesor:** M. en C. Gabriel Hurtado Avilés  
-**Grupo:** 7CV4 &nbsp;|&nbsp; **Ciclo Escolar:** 2027-1  
-**Semestre:** 2027-1  
+**Grupo:** 7CV4 &nbsp;|&nbsp; **Semestre:** 2027-1  
+**Ciclo Escolar:** 2027-1  
 
 ---
 
@@ -33,367 +33,246 @@
 
 <br/>
 
-## 📸 Evidencias de Ejecución (Parte 1: Gestor de Archivos Multiplataforma)
-
-A continuación se presentan las capturas reales de la aplicación ejecutándose en el emulador de Android (API 35), demostrando el cumplimiento estricto de los requerimientos visuales, funcionales y de seguridad exigidos en el documento descriptivo de la práctica:
-
-| Explorador de Archivos (Tema Guinda IPN - Modo Claro) | Explorador con Filtros (Tema Azul ESCOM - Modo Oscuro) |
-| :---: | :---: |
-| <img src="docs/capturas/p1_01_explorador_guinda.png" width="340px" alt="Explorador Guinda IPN" /> | <img src="docs/capturas/p1_02_explorador_azul_oscuro.png" width="340px" alt="Explorador Azul ESCOM" /> |
-| **Figura 1:** Navegación por migas de pan (*Breadcrumbs*), árbol de carpetas del espacio privado (`context.filesDir`), botón de acción flotante (+) y tema institucional Guinda IPN en modo claro. | **Figura 2:** Filtro activo de favoritos / recientes persistentes, lista de archivos clasificados por ícono de categoría y adaptación automática al Tema Azul ESCOM en Modo Oscuro. |
-
-<br/>
-
-| Visor JSON con Resaltado de Sintaxis | Visor XML con Resaltado de Sintaxis |
-| :---: | :---: |
-| <img src="docs/capturas/p1_03_visor_json_highlight.png" width="340px" alt="Visor JSON" /> | <img src="docs/capturas/p1_04_visor_xml_highlight.png" width="340px" alt="Visor XML" /> |
-| **Figura 3:** Visor integrado para `alumnos_escom.json` con tokenización léxica en KMP: claves en púrpura, strings en azul, booleanos y números diferenciados, con botones de copiar al portapapeles y compartir. | **Figura 4:** Visor integrado para `configuracion_red.xml` con análisis léxico de etiquetas, atributos y valores diferenciados a colores, con scroll suave y barra de acciones superior. |
-
-<br/>
-
-| Diálogos Modales, Metadatos y Operaciones CRUD |
-| :---: |
-| <img src="docs/capturas/p1_05_dialogos_crud_metadatos.png" width="360px" alt="Metadatos y Operaciones CRUD" /> |
-| **Figura 5:** Consulta de metadatos completos (nombre, ruta absoluta en espacio privado, tamaño exacto en bytes y formateado, fecha de última modificación, MIME type y permisos de lectura/escritura) y menú de operaciones de archivo (renombrar, copiar, mover, eliminar con confirmación destructiva). |
-
-<br/>
-
-## 📸 Evidencias de Ejecución (Parte 2: Videojuego Cyber Breach - Net Strike)
-
-A continuación se presentan las capturas reales de la aplicación de videojuego táctico ejecutándose en el emulador de Android (API 35), demostrando el menú de inicio estilizado, la cuadrícula 8×8 de ataque y habilidades, la cuadrícula de defensa y contraataque de la CPU, la gestión de partidas y el visor de código crudo:
-
-| Menú de Inicio Estilizado (Title Screen) | Tablero Táctico 8×8 y Habilidades Especiales |
-| :---: | :---: |
-| <img src="docs/capturas/p2_01_menu_principal.png" width="340px" alt="Menú de Inicio Cyber Breach" /> | <img src="docs/capturas/p2_02_tablero_ataque_skills.png" width="340px" alt="Tablero Táctico y Habilidades" /> |
-| **Figura 6:** Menú de bienvenida con estilo ciberpunk, radar táctico central animado, emblema IPN/ESCOM, botón *Nueva Incursión* (con selector modal de modo de juego), botón *Cargar Partida* (con detección reactiva de partidas guardadas) y acceso a *Configuración*. | **Figura 7:** Cuadrícula de ataque a la red enemiga 8×8 (64 celdas), barra de estado con puntuación, turnos, medidor de energía táctica (EN) para habilidades *Ping Sweep* y *DDoS Attack*, y chips de estado de los nodos enemigos (Firewall, Base de Datos, Servidor Web, Mainframe). |
-
-<br/>
-
-| Modo Cyber Duelo 1v1: Cuadrícula de Defensa y CPU | Gestor de Partidas Multi-Formato (.txt, .xml, .json) |
-| :---: | :---: |
-| <img src="docs/capturas/p2_03_duelo_defensa_cpu.png" width="340px" alt="Defensa Propia vs CPU" /> | <img src="docs/capturas/p2_04_gestor_partidas_guardado.png" width="340px" alt="Gestor de Partidas" /> |
-| **Figura 8:** Pestaña "TU RED (DEFENSA)" en el modo *Cyber Duelo vs CPU*: cuadrícula `PlayerDefenseGrid` con los nodos propios identificados (`F`, `D`, `W`, `M`), fallos e impactos de la CPU, terminal de logs en tiempo real y condición de derrota activa ante la máquina. | **Figura 9:** Gestor modal de partidas guardadas con filtrado por categorías (*Campaña*, *Duelo CPU*, *Récord*), indicador visual de formato (.json, .xml, .txt), fecha/hora, estadísticas de juego y botones de acción (Cargar, Ver Código Crudo, Renombrar Etiqueta, Eliminar). |
-
-<br/>
-
-| Visor de Código Crudo Serializado y Diálogo Fin de Partida |
-| :---: |
-| <img src="docs/capturas/p2_05_visor_crudo_gameover.png" width="360px" alt="Visor Crudo y GameOver" /> |
-| **Figura 10:** Inspección transparente del archivo serializado (XML / JSON / TXT) mediante el visor integrado con tipografía monoespaciada, resaltando matrices discretas y nodos, junto con el diálogo de fin de incursión con opción directa para **Regresar al Menú Principal** o guardar el resultado. |
+## 📑 Índice de Contenidos
+1. [Resumen Ejecutivo y Alcance](#-resumen-ejecutivo-y-alcance)
+2. [Arquitectura y Estructura Multiplataforma (KMP)](#-arquitectura-y-estructura-multiplataforma-kmp)
+3. [Ejercicio 1: Sensores e Interacción (Parte 1 - Gestor de Archivos)](#-ejercicio-1-sensores-e-interacción)
+4. [Ejercicio 2: Transferencia de Archivos por Bluetooth (Parte 1)](#-ejercicio-2-transferencia-de-archivos-por-bluetooth)
+5. [Ejercicio 3: Consulta Web vía Proxy Relay Bluetooth (Parte 1)](#-ejercicio-3-consulta-web-vía-proxy-relay-bluetooth)
+6. [Videojuego Ciberduelo Bluetooth 1v1 y Sensores (Parte 2 - Cyber Breach)](#-videojuego-ciberduelo-bluetooth-1v1-y-sensores)
+7. [Matriz Exhaustiva de Pruebas y Aseguramiento de Calidad (QA)](#-matriz-exhaustiva-de-pruebas-qa)
+8. [Guía de Evidencias y Capturas para Samsung Galaxy A54](#-guía-de-evidencias-y-capturas)
+9. [Instrucciones de Compilación y Ejecución](#-instrucciones-de-compilación-y-ejecución)
+10. [Conclusiones Técnicas y Referencias APA](#-conclusiones-técnicas-y-referencias-apa)
 
 ---
 
-## 📋 Resumen Ejecutivo y Alcance de la Práctica
+## 📋 Resumen Ejecutivo y Alcance
 
-En esta práctica se desarrollaron dos soluciones móviles completas implementadas íntegramente bajo la tecnología **Kotlin Multiplatform (KMP)** con soporte compartido para **Android (API 24+)** e **iOS (iOS 15+)**, operando al 100% de manera **offline** sin dependencia de conexión a Internet y respetando las directivas estrictas de seguridad (Scoped Storage, Storage Access Framework y Sandbox de iOS):
-
-1. **Parte 1: Gestor de Archivos Multiplataforma (`parte1_gestor_archivos`)**  
-   Explorador de almacenamiento con soporte para espacio privado de la aplicación, navegación intuitiva con migas de pan (*breadcrumbs*), árbol jerárquico, visor de texto/Markdown, visor de JSON y XML con **resaltado de sintaxis tokenizado**, visor interactivo de imágenes con **zoom gestual (*pinch-to-zoom*) y rotación a 90°**, historial de recientes persistente, favoritos persistentes, operaciones CRUD con diálogo de confirmación para acciones destructivas y selector de temas institucionales (**Guinda IPN** y **Azul ESCOM** con adaptación automática a modo claro/oscuro).
-
-2. **Parte 2: Videojuego Cyber Breach (Net Strike) con Gestión de Archivos (`parte2_cyber_breach`)**  
-   Videojuego táctico por turnos en cuadrícula discreta de 8×8 (64 celdas) inspirado en las reglas de Batalla Naval (*battleship*), ambientado en una intrusión cibernética donde el jugador vulnera una infraestructura de red enemiga localizando y destruyendo cuatro tipos de nodos ocultos:
-   - **Firewall Gateway** (1 celda)
-   - **Base de Datos SQL** (2 celdas)
-   - **Servidor Web Nginx** (3 celdas)
-   - **Mainframe Central** (4 celdas)  
-   
-   Cada impacto exitoso recarga la batería táctica para desencadenar habilidades especiales:
-   - **Ping Sweep (20 EN):** Escaneo de área 2×2 detectando firmas de nodos activos.
-   - **DDoS Attack (30 EN):** Disparo consecutivo simultáneo sobre 3 casillas en línea.  
-   
-   **Novedades de Experiencia de Videojuego e Interfaz:**
-   - **Menú de Inicio Estilizado (`TitleMenuScreen`):** Pantalla de bienvenida con radar táctico animado, opciones de *Nueva Incursión* (con selector de modo de juego), *Reanudar Partida*, *Cargar Partida* (deshabilitado inteligentemente si no existen partidas guardadas previas) y *Configuración*.
-   - **Dos Modos de Juego Diferenciados:**
-     1. **Infiltración en Solitario:** Exploración por turnos libres hasta neutralizar la totalidad de los nodos de la red enemiga.
-     2. **Cyber Duelo 1v1 vs CPU:** Combate interactivo por turnos donde el jugador cuenta con su propia red desplegada (`playerNodes`) y cada disparo del usuario desencadena un contraataque táctico de la CPU sobre la red propia, permitiendo victorias épicas o derrotas reales ante la máquina, con pestañas para alternar entre la vista de ataque a la red enemiga y la cuadrícula de defensa propia (`PlayerDefenseGrid`).
-   - **Navegación Fluida y Retorno al Menú Principal:** Botón directo de regreso al Menú Principal en la barra superior y opción de retorno al finalizar cada incursión o nivel desde el diálogo de resultado (*GameOverDialog*).
-   
-   **Motor de Gestión de Archivos y Persistencia:**
-   Capaz de guardar y cargar partidas en **tres formatos diferentes obligatorios**:
-   - **Texto plano (`.txt`)**
-   - **XML (`.xml`)**
-   - **JSON (`.json`)**  
-   
-   Incluye auto-guardado para recuperación de sesión activa tras cierre de app, visor de código crudo integrado para inspeccionar los archivos guardados, etiquetado/categorización de partidas y exportación/compartir mediante `FileProvider` e `Intent.ACTION_SEND`.
+La **Práctica 6** extiende integralmente las dos aplicaciones desarrolladas en la Práctica 4 (Gestor de Archivos Multiplataforma y Videojuego Táctico Cyber Breach / Net Strike), incorporando capacidades avanzadas de hardware nativo:
+- **Sensores Físicos:** Lectura y procesamiento en tiempo real de **Acelerómetro** y **Giroscopio**, detección de agitación (*shake gesture*), navegación panorámica de imágenes por inclinación (*tilt-to-pan*), retícula cinética de apuntado en cuadrícula de 8×8 y recarga de energía cinética con temporizador de enfriamiento.
+- **Autenticación Biométrica:** Protección de bóveda confidencial mediante **BiometricPrompt API** (Android API 24+) y `LocalAuthentication` (iOS), admitiendo huella dactilar, biometría facial y credencial de bloqueo de pantalla.
+- **Comunicaciones Inalámbricas Bluetooth RFCOMM P2P (100% Offline):**
+  1. *Transferencia Confiable de Archivos:* Protocolo fragmentado en paquetes de 4 KB con Stop-and-Wait ACK, cálculo y verificación criptográfica de hash **SHA-256**, archivo temporal `.tmp` con renombrado atómico y catálogo de historial con estados.
+  2. *Proxy Web Relay:* Arquitectura Pasarela-Visor donde un dispositivo conectado a Internet atiende consultas HTTP de un visor sin conexión a través de un canal seguro RFCOMM, mitigando vulnerabilidades SSRF con lista blanca y fallback a caché local.
+  3. *Combate Multijugador Sincronizado 1v1:* Duelo en tiempo real entre dos terminales conectadas por Bluetooth, alternancia estricta de turnos, numeración de secuencia (`seq`) contra duplicados y detección inmediata de desconexión sin corrupción de memoria.
+- **Directrices Institucionales:** Soporte estricto de colores institucionales (**Guinda IPN** `#6C1D45` y **Azul ESCOM** `#003366`), arquitectura desacoplada (*Clean Architecture*), compatibilidad KMP para Android API 24+ e iOS 15+, y funcionamiento autónomo sin requerir servicios en la nube ni conexión externa obligatoria.
 
 ---
 
-## 🏗️ Arquitectura de Software KMP y Clean Architecture
+## 🏛 Arquitectura y Estructura Multiplataforma (KMP)
 
-Ambos proyectos fueron construidos bajo los principios de **Clean Architecture** y separación estricta de responsabilidades entre el módulo compartido (`:shared`) y el cliente nativo Android (`:androidApp`):
+El proyecto se estructura bajo el patrón de **Arquitectura Limpia (Clean Architecture)** con MVI/MVVM y flujo de datos unidireccional (*Unidirectional Data Flow*):
 
 ```
 practica4_Moviles/
-├── AndroidPractica4_Multiplataforma_KMP_Flutter_2027-1.pdf
-├── .gitignore                      <-- Exclusiones completas de Gradle, build y caches
-├── README.md                       <-- Reporte técnico institucional con evidencias integradas
-├── docs/
-│   ├── capturas/                   <-- Evidencias visuales de la aplicación
-│   └── pruebas.md                  <-- Matriz QA con los 6 casos de prueba estructurados
-├── parte1_gestor_archivos/         <-- PARTE 1: Gestor de Archivos KMP
+├── parte1_gestor_archivos/
 │   ├── shared/
-│   │   └── src/
-│   │       ├── commonMain/         <-- Modelos, Highlighting léxico, Repositorio, ViewModel
-│   │       ├── androidMain/        <-- Implementación con Scoped Storage / java.io / SharedPreferences
-│   │       └── iosMain/            <-- Implementación Sandbox iOS / NSFileManager
-│   └── androidApp/                 <-- UI Jetpack Compose, Temas Guinda/Azul, Visores, Breadcrumbs
-└── parte2_cyber_breach/            <-- PARTE 2: Cyber Breach (Net Strike) KMP
+│   │   ├── src/commonMain/kotlin/com/escom/ipn/p4/filemanager/
+│   │   │   ├── model/ (SensorModels, BiometricModels, BluetoothModels, HttpProxyModels)
+│   │   │   ├── service/ (BluetoothProtocolService, ISensorManager, IBluetoothTransferService, Sha256Util)
+│   │   │   └── viewmodel/ (FileManagerViewModel)
+│   │   ├── src/androidMain/kotlin/com/escom/ipn/p4/filemanager/service/
+│   │   │   ├── AndroidSensorManager.kt
+│   │   │   ├── AndroidBiometricAuthService.kt
+│   │   │   ├── AndroidBluetoothService.kt
+│   │   │   └── Sha256Util.android.kt
+│   │   └── src/iosMain/kotlin/com/escom/ipn/p4/filemanager/service/ (Stubs iOS CoreMotion & LocalAuth)
+│   └── androidApp/src/main/kotlin/com/escom/ipn/p4/filemanager/
+│       ├── MainActivity.kt (FragmentActivity con ciclo de vida onPause/onResume)
+│       └── ui/components/
+│           ├── SensorTelemetryDialog.kt
+│           ├── BluetoothTransferDialog.kt
+│           ├── WebProxyDialog.kt
+│           ├── BiometricVaultDialog.kt
+│           └── FileViewerSheet.kt (Tilt-to-pan con giroscopio)
+└── parte2_cyber_breach/
     ├── shared/
-    │   └── src/
-    │       ├── commonMain/         <-- Motor de Juego, Serialización TXT/XML/JSON, Modelos, ViewModel
-    │       ├── androidMain/        <-- AndroidGameSaveRepository, AndroidAudioService (AudioTrack)
-    │       └── iosMain/            <-- IosGameSaveRepository, IosAudioService
-    └── androidApp/                 <-- UI Jetpack Compose, Grid 8x8, Barra de Energía, Gestor de Partidas
-```
-
-### Diagrama de Flujo y Capas de KMP
-
-```
-+---------------------------------------------------------------------------------+
-|                               CLIENTES DE USUARIO                               |
-|   Android (Jetpack Compose, Material 3)    |    iOS (SwiftUI / UIKit Framework) |
-+---------------------------------------------------------------------------------+
-                                        │
-                                        ▼
-+---------------------------------------------------------------------------------+
-|                       CAPA DE PRESENTACIÓN (:shared)                            |
-|    - FileManagerViewModel / CyberBreachViewModel (StateFlow, CoroutineScope)    |
-|    - Manejo de estados de UI inmutables (UiState) y filtros de visualización    |
-+---------------------------------------------------------------------------------+
-                                        │
-                                        ▼
-+---------------------------------------------------------------------------------+
-|                          CAPA DE DOMINIO Y MOTOR                                |
-|    - GameEngine: Disparo simple, Ping Sweep 2x2, DDoS 3x1, cálculo de turnos   |
-|    - FileSyntaxHighlighter: Parser léxico de tokens para JSON y XML             |
-+---------------------------------------------------------------------------------+
-                                        │
-                                        ▼
-+---------------------------------------------------------------------------------+
-|                        CAPA DE DATOS Y SERIALIZACIÓN                            |
-|    - GameSerializationService: Motores bidireccionales TXT, XML y JSON         |
-|    - IFileManagerRepository / IGameSaveRepository                              |
-+---------------------------------------------------------------------------------+
-                    │                                             │
-                    ▼                                             ▼
-        [androidMain: Storage / Audio]                [iosMain: Sandbox / Audio]
+    │   ├── src/commonMain/kotlin/com/escom/ipn/p4/cyberbreach/
+    │   │   ├── model/ (CyberBreachModels, CyberBreachPacket, IGameSensorManager)
+    │   │   ├── service/ (GameEngine, IBluetoothGameService)
+    │   │   └── viewmodel/ (CyberBreachViewModel)
+    │   ├── src/androidMain/kotlin/com/escom/ipn/p4/cyberbreach/service/
+    │   │   ├── AndroidGameSensorManager.kt (Tilt aiming & Kinetic shake)
+    │   │   └── AndroidBluetoothGameService.kt (RFCOMM 1v1 Sync)
+    │   └── src/iosMain/kotlin/com/escom/ipn/p4/cyberbreach/service/
+    └── androidApp/src/main/kotlin/com/escom/ipn/p4/cyberbreach/
+        ├── MainActivity.kt
+        └── ui/
+            ├── CyberBreachScreen.kt (HUD Bluetooth y controles de sensores)
+            ├── components/
+            │   ├── CyberGrid.kt (Mira de apuntado cinético)
+            │   ├── BluetoothLobbyDialog.kt
+            │   └── PlayerDefenseGrid.kt
+            └── screens/TitleMenuScreen.kt
 ```
 
 ---
 
-## 🎨 Identidad Visual y Temas Institucionales
+## 📱 Ejercicio 1: Sensores e Interacción
 
-Ambas aplicaciones implementan los dos temas institucionales requeridos en la especificación, adaptándose de manera reactiva y automática tanto al modo claro como al modo oscuro del sistema:
+### 1. Telemetría de Acelerómetro y Giroscopio
+- **Acelerómetro:** Mide la aceleración propia del dispositivo en los 3 ejes ($a_x, a_y, a_z$) en $m/s^2$, permitiendo detectar la orientación con respecto al campo gravitatorio terrestre ($g \approx 9.81\text{ }m/s^2$).
+- **Giroscopio:** Registra la velocidad angular $(\omega_x, \omega_y, \omega_z)$ en radianes por segundo ($rad/s$), calculando la velocidad de rotación y torsión.
+- **Gestión del Ciclo de Vida y Ahorro de Batería:**
+  En cumplimiento estricto con las directrices de Android y la especificación de la práctica:
+  - Al pasar la aplicación a segundo plano (`onPause`), se invoca de inmediato `sensorManager.unregisterListener(this)`, suspendiendo el muestreo de hardware y evitando el drenado involuntario de batería.
+  - Al regresar a primer plano (`onResume`), los sensores se registran nuevamente con `SENSOR_DELAY_UI` o `SENSOR_DELAY_GAME`.
+- **Modo Simulado / Pruebas:**
+  El diálogo modal `SensorTelemetryDialog` incluye conmutador de simulación y botones de inyección de valores para QA sin necesidad de agitar físicamente el equipo en entornos CI/CD o emuladores de escritorio.
 
-| Elemento Visual | Tema Guinda IPN | Tema Azul ESCOM |
-| :--- | :--- | :--- |
-| **Color Primario** | `#6C1D45` / `#8B1E54` | `#003366` / `#005599` |
-| **Color de Acento** | Rosa Neón (`#FF4081`) | Cyan Eléctrico (`#00E5FF`) |
-| **Fondo Modo Claro** | Blanco con tinte tenue `#FCF7F9` | Blanco con tinte tenue `#F6F9FC` |
-| **Fondo Modo Oscuro** | Cyber Consola Guinda `#140810` | Cyber Consola Azul `#070E18` |
-| **Superficies y Tarjetas** | Contraste suave `#220F1A` | Contraste suave `#0D1B2A` |
+### 2. Detección de Agitación (*Shake Detection*)
+El algoritmo implementado evalúa la fuerza $g$ instantánea calculada como:
+$$g_{\text{force}} = \frac{\sqrt{a_x^2 + a_y^2 + a_z^2}}{g_{\text{earth}}}$$
+Si $g_{\text{force}} > 2.2$ y ha transcurrido un periodo de enfriamiento (*debouncing*) de al menos $800\text{ ms}$, se dispara un evento hápitco y la acción contextual asociada (ej. ordenamiento aleatorio de lista o reseteo de vista).
 
----
+### 3. Desplazamiento Panorámico por Inclinación (*Tilt-to-Pan*)
+En el visor integrado de imágenes (`FileViewerSheet`), la inclinación física del dispositivo (pitch y roll) traslada dinámicamente las coordenadas del lienzo $(x, y)$, permitiendo inspeccionar imágenes en alta resolución con movimiento natural sin necesidad de deslizar el dedo.
 
-## 📁 Especificaciones de la Parte 1: Gestor de Archivos Multiplataforma
-
-### Funcionalidades Centrales:
-1. **Exploración de Carpetas y Espacio Privado:**
-   - Carga inicial en el almacenamiento privado de la app (`context.filesDir`) asegurando 0 permisos innecesarios.
-   - Si el directorio se encuentra vacío en la primera ejecución, se generan automáticamente archivos demo (`bienvenida_ipn.txt`, `especificaciones.md`, `alumnos_escom.json`, `configuracion_red.xml`) para facilitar las pruebas inmediatas.
-2. **Navegación Intuitiva por Migas de Pan (*Breadcrumbs*):**
-   - Fila de *chips* interactiva que muestra la jerarquía actual (`Espacio Privado > Documentos > ...`). Tocar cualquier fragmento salta directamente a ese nivel. El botón físico o gesto Atrás retrocede ordenadamente a la carpeta contenedora.
-3. **Visores Especializados:**
-   - **JSON y XML:** Procesados por el analizador léxico `FileSyntaxHighlighter`, el cual clasifica el texto en tokens (claves, cadenas, números, booleanos, etiquetas XML, nombres de atributo, valores de atributo y comentarios) coloreados con una paleta de alto contraste sobre tarjeta monoespaciada.
-   - **Texto y Markdown:** Visor monoespaciado con scroll vertical suave y botón de copia al portapapeles.
-   - **Imágenes:** Visor con soporte gestual de ampliación (*pinch-to-zoom*) de 0.5× a 5.0× con arrastre panorámico, botón de rotación a 90° sucesivos y botón de reinicio a escala 1:1.
-   - **Formatos no soportados:** Tarjeta de metadatos completos y opciones directas de "Abrir en otra app" (`Intent.ACTION_VIEW`) y "Compartir" (`Intent.ACTION_SEND` mediante `FileProvider`).
-4. **Metadatos y Operaciones CRUD:**
-   - Creación de carpetas y archivos nuevos.
-   - Renombrado y eliminación de elementos con diálogo de confirmación para acciones destructivas.
-   - Diálogo de detalles con nombre, ruta absoluta, bytes exactos, tamaño legible (KB/MB), fecha de modificación, tipo MIME y permisos de lectura/escritura.
-5. **Historial de Recientes y Favoritos:**
-   - Los favoritos se marcan con una estrella y persisten en almacenamiento local (`SharedPreferences`).
-   - Barra de filtros rápidos para listar solo favoritos o recientes.
+### 4. Bóveda Protegida por Biometría (*Biometric Vault*)
+Protección de documentos confidenciales mediante `BiometricPrompt` de AndroidX:
+- Admite autenticación fuerte (`BIOMETRIC_STRONG`) y credencial de respaldo (`DEVICE_CREDENTIAL`: PIN, patrón o contraseña).
+- Bloqueo en memoria: Los archivos de la bóveda sólo se descifran y listan tras un resultado exitoso de la API biométrica nativa del sistema.
 
 ---
 
-## 🎮 Especificaciones de la Parte 2: Cyber Breach (Net Strike)
+## 📡 Ejercicio 2: Transferencia de Archivos por Bluetooth
 
-### Arquitectura de Pantallas y Experiencia de Usuario:
-- **Menú de Inicio Estilizado (`TitleMenuScreen`):**  
-  Pantalla de bienvenida temática tipo consola táctica que organiza el acceso al juego:
-  - **Radar Táctico Central:** Animación visual de barrido y escudo de red.
-  - **Nueva Incursión:** Diálogo modal para seleccionar entre *Infiltración en Solitario* o *Cyber Duelo vs CPU*.
-  - **Cargar Partida:** Detecta automáticamente si existen partidas guardadas en el almacenamiento privado; se activa con borde cian interactivo si hay registros, o se deshabilita con opacidad atenuada si la lista está vacía.
-  - **Reanudar Partida:** Botón dinámico que aparece si se detecta una sesión previa activa en memoria.
-  - **Configuración:** Ajuste de formato preferido de persistencia (.json, .xml, .txt), tema (Guinda IPN / Azul ESCOM) y sonido.
-- **Navegación Fluida y Retorno al Menú Principal:**  
-  Botón Home permanente en la barra superior (`TopAppBar`) y botón directo "Menú Principal" en el diálogo de fin de partida (`GameOverDialog`).
+El módulo de transferencia Bluetooth permite compartir documentos `.txt`, `.xml`, `.json` e imágenes `.jpg` directamente entre dos dispositivos móviles mediante un canal RFCOMM con UUID `fa87c0d0-afac-11de-8a39-0800200c9a66`:
 
-### Mecánicas del Juego y Modos Disponibles:
-- **Cuadrícula Táctica 8×8 (64 celdas):** Filas numeradas 1–8 y columnas rotuladas A–H.
-- **Nodos Ocultos de Red:**
-  - `Firewall Gateway` (1 celda)
-  - `Base de Datos SQL` (2 celdas)
-  - `Servidor Web Nginx` (3 celdas)
-  - `Mainframe Central` (4 celdas)
-- **Estados de Celda:**
-  - `0 (Oculta):` Fondo oscuro con punto táctico.
-  - `1 (Fallo):` Cruz gris/cian indicando ausencia de nodos.
-  - `2 (Impacto):` Advertencia naranja brillante con pulso táctico.
-  - `3 (Destruido / Neutralizado):` Ícono de peligro/calavera en rojo carmesí neón cuando todas las celdas del nodo han sido impactadas.
-- **Batería y Habilidades Tácticas:**
-  - Cada impacto exitoso otorga **+10 EN** (hasta un máximo de 100 EN) y **+100 puntos** (+500 al neutralizar un nodo completo).
-  - **Ping Sweep (20 EN):** Escanea un cuadrante de 2×2 reportando si existen nodos presentes sin revelarlos directamente.
-  - **DDoS Attack (30 EN):** Dispara una ráfaga que impacta tres casillas simultáneas en línea.
-- **Dos Modos de Juego Completos:**
-  1. **Infiltración en Solitario:** Exploración táctica por turnos para optimizar la puntería y comprometer los 4 nodos de la red enemiga sin límite de tiempo.
-  2. **Cyber Duelo 1v1 vs CPU:** Combate interactivo por turnos. El jugador cuenta con su propia cuadrícula de defensa (`PlayerDefenseGrid`) con 4 nodos asignados. Cada ataque del usuario desencadena un contraataque de la CPU (con IA táctica adyacente a impactos previos). El usuario puede alternar entre las pestañas **[RED ENEMIGA (ATACAR)]** y **[TU RED (DEFENSA)]**, con condición de derrota real si la CPU destruye su infraestructura.
-- **Audio Procedural:** Síntesis en tiempo real con `AudioTrack` para disparos, impactos, fallos, activación de habilidades, fanfarria de victoria y alarma de tiempo/ataque.
-
-### Motores de Persistencia y Serialización en 3 Formatos:
-El motor `GameSerializationService` implementa serialización y deserialización bidireccional completa con soporte para el estado del jugador y la CPU:
-
-1. **Formato JSON (`.json`):**  
-   Implementado con `kotlinx.serialization.json.Json` con formato legible (*pretty-print*):
-   ```json
-   {
-     "metadata": {
-       "id": "cyber_save_1762234000",
-       "title": "Duelo Cibernético Alpha",
-       "categoryTag": "Duelo CPU",
-       "format": "JSON",
-       "score": 1200,
-       "mode": "CPU_DUEL"
-     },
-     "state": {
-       "gridSize": 8,
-       "grid": [0, 0, 1, 2, 3, ...],
-       "playerGrid": [0, 1, 0, 0, ...],
-       "playerEnergy": 40,
-       "score": 1200,
-       "turns": 15,
-       "nodes": [...],
-       "playerNodes": [...]
-     }
-   }
-   ```
-
-2. **Formato XML (`.xml`):**  
-   Estructurado con etiquetas semánticas y validación de nodos:
-   ```xml
-   <?xml version="1.0" encoding="UTF-8"?>
-   <CyberBreachSave>
-     <Metadata>
-       <Id>cyber_save_1762234000</Id>
-       <Title>Cyber Duelo vs CPU</Title>
-       <CategoryTag>Duelo CPU</CategoryTag>
-       <Format>XML</Format>
-       <Score>1200</Score>
-       <Mode>CPU_DUEL</Mode>
-     </Metadata>
-     <GameState>
-       <GridSize>8</GridSize>
-       <GridCells>0,0,1,2,3,...</GridCells>
-       <PlayerGridCells>0,0,0,1,0,...</PlayerGridCells>
-       <PlayerEnergy>40</PlayerEnergy>
-       <Score>1200</Score>
-     </GameState>
-     <Nodes>
-       <Node id="node_firewall" type="FIREWALL" hits="1" compromised="true">
-         <Cells>12</Cells>
-       </Node>
-     </Nodes>
-   </CyberBreachSave>
-   ```
-
-3. **Formato Texto Plano (`.txt`):**  
-   Diseñado en secciones declarativas con cabeceras `[METADATA]`, `[GAME_STATE]`, `[GRID_MATRIX]`, `[PLAYER_GRID_MATRIX]`, `[NODES]`, `[PLAYER_NODES]` y `[ACTION_HISTORY]`.
-
-### Funcionalidades de Archivo Adicionales:
-- **Auto-Guardado:** Cada movimiento y cambio de estado guarda la sesión activa en `active_session.json`, restaurándose de manera transparente al reabrir la app.
-- **Visor de Código Crudo:** Permite visualizar directamente en la app el contenido en texto del archivo guardado (.txt, .xml o .json) con botón para copiarlo al portapapeles (Figura 10).
-- **Categorización / Etiquetado:** Posibilidad de asignar y cambiar etiquetas a cada partida ("Campaña", "Práctica", "Difícil", "Récord", "Favorito", "Duelo CPU").
-- **Compartir y Exportar:** Generación de URI segura con `FileProvider` para compartir partidas hacia clientes de mensajería, correo o exploradores de archivos externos.
-- **Resiliencia ante Archivos Corruptos:** Si se detecta un archivo con matriz incompleta, tags faltantes o 0 bytes, el sistema emite una alerta legible sin corromper ni perder las demás partidas.
+### Fases del Protocolo de Transferencia:
+1. **Descubrimiento y Emparejamiento:** Listado interactivo de dispositivos emparejados del sistema con actualización reactiva.
+2. **Handshake y Aceptación Explícita:** El emisor envía un paquete `FileTransferMetadataPacket` con nombre, tamaño, total de fragmentos y hash SHA-256 esperado. El receptor recibe un diálogo modal emergente con todos los detalles y debe confirmar explícitamente (`ACEPTAR` o `RECHAZAR`).
+3. **Fragmentación en Bloques (Chunking):** El archivo se divide en bloques binarios de **4,096 bytes (4 KB)** codificados en Base64.
+4. **Confirmación Secuencial (Stop-and-Wait ACK):** Cada bloque enviado espera la confirmación secuencial del receptor (`TransferAckPacket`) antes de emitir el siguiente, asegurando cero saturación de búfer y permitiendo calcular con precisión el progreso porcentual.
+5. **Almacenamiento Temporal Seguro (.tmp):** Los fragmentos entrantes se escriben incrementalmente en un archivo privado `incoming_transfer.tmp`.
+6. **Verificación de Integridad SHA-256:** Una vez recibidos todos los bloques, el receptor computa el hash criptográfico SHA-256 sobre los bytes recibidos y lo contrasta contra el hash original:
+   - Si coinciden exactamente: Se efectúa un renombrado atómico al nombre definitivo y se registra con estado `COMPLETED`.
+   - Si no coinciden o la transferencia es abortada: El archivo temporal `.tmp` se elimina inmediatamente del almacenamiento, previniendo archivos corruptos o truncados.
+7. **Historial de Transferencias:** Bitácora en memoria y almacenamiento con estados: `PENDING`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED` y `FAILED`.
 
 ---
 
-## 🧪 Matriz de Pruebas de Calidad (QA)
+## 🌐 Ejercicio 3: Consulta Web vía Proxy Relay Bluetooth
 
-| # | Caso de Prueba | Categoría | Módulo | Resultado | Estado |
-|---|---|---|---|---|---|
-| **CP-01** | Visualización y resaltado de sintaxis JSON/XML en visor | Ruta Feliz | Gestor de Archivos | Contenido formateado y coloreado por tipo de token; botones de copiar y compartir funcionales (Figuras 3 y 4) | **EXITOSO** |
-| **CP-02** | Detección de partida corrupta o incompleta sin fallas | Condición Límite | Cyber Breach | Mensaje legible en Snackbar; la app no crashea y preserva las demás partidas intactas | **EXITOSO** |
-| **CP-03** | Persistencia de favoritos y navegación por Breadcrumbs | Regresión | Gestor de Archivos | Los favoritos persisten tras reinicio; navegación jerárquica limpia con botón Atrás (Figuras 1 y 2) | **EXITOSO** |
-| **CP-04** | Auto-guardado, reanudación y menú de inicio reactivo | Navegación / Ciclo de Vida | Cyber Breach | Restauración exacta de cuadrícula, turnos y energía; botón de reanudar en menú de inicio (Figuras 6 y 7) | **EXITOSO** |
-| **CP-05** | Pinch-to-zoom (5x), rotación 90° y temas Guinda/Azul | Accesibilidad y Visualización | Gestor de Archivos | Ampliación fluida, rotación sin distorsión y adaptación perfecta a claro/oscuro (Figuras 1, 2 y 5) | **EXITOSO** |
-| **CP-06** | Cyber Duelo vs CPU, persistencia en 3 formatos y visor crudo | Compatibilidad y Lógica | Cyber Breach | Serialización y deserialización fiel en .TXT, .XML y .JSON; defensa vs CPU y visor crudo funcional (Figuras 8, 9 y 10) | **EXITOSO** |
+Permite que un dispositivo sin acceso a Internet (**Dispositivo B - Visor Offline** con Wi-Fi y datos móviles desactivados) consulte recursos Web a través de un dispositivo conectado a Internet (**Dispositivo A - Pasarela Online**) mediante enlace Bluetooth:
 
-*(Para el desglose paso a paso de cada caso, consultar [`docs/pruebas.md`](docs/pruebas.md)).*
+### Topología y Flujo de Comunicación:
+```
+[Dispositivo B: Visor Offline]  <--- Bluetooth RFCOMM --->  [Dispositivo A: Gateway]  <--- HTTPS --->  [Servidores Web]
+ (Modo Avión / Sin Internet)                                   (Wi-Fi / Datos Móviles)
+```
+
+1. **Solicitud Reenviada:** El Dispositivo B emite un paquete `HttpProxyRequest` indicando URL, método y cabeceras.
+2. **Validación de Seguridad y Mitigación SSRF:**
+   La pasarela inspecciona la URL solicitada contra una lista blanca predefinida:
+   - `jsonplaceholder.typicode.com`
+   - `pokeapi.co`
+   - `worldtimeapi.org`
+   - `api.github.com/zen`
+   Cualquier intento de alcanzar direcciones IP privadas (RFC 1918: `10.x.x.x`, `192.168.x.x`, `172.16.x.x`), `localhost`, `127.0.0.1` o metadatos de nube es interceptado y rechazado de inmediato.
+3. **Ejecución HTTP y Retransmisión:** El Dispositivo A realiza la consulta HTTPS nativa y empaqueta el código de estado, cabeceras y cuerpo en `HttpProxyResponse`, retransmitiéndolo por Bluetooth al Dispositivo B.
+4. **Caché Local Persistente:** El Dispositivo B almacena en almacenamiento privado cada respuesta exitosa junto con la fecha y hora de consulta. Si la conexión Bluetooth se pierde, el visor despliega la versión en caché indicando claramente `[MODO OFFLINE - DESDE CACHÉ LOCAL]`.
 
 ---
 
-## 🚀 Guía de Compilación y Ejecución
+## 🎮 Videojuego Ciberduelo Bluetooth 1v1 y Sensores
 
-### Requisitos del Entorno:
-- **JDK:** OpenJDK 17, 21 o 25 (incluido en Android Studio JBR: `C:\Program Files\Android\Android Studio\jbr`).
-- **Android SDK:** Compile SDK 35, Min SDK 24.
-- **Gradle:** Gradle 9.1.0 (incluido mediante Gradle Wrapper).
-- **Kotlin:** 2.2.0 / 2.2.20.
+En la **Parte 2 (Cyber Breach / Net Strike)**, se integra un modo multijugador local en tiempo real por Bluetooth RFCOMM con UUID `e0cbf06c-cd8b-4647-bb8a-263b43f0f974`:
 
-### 1. Compilación y Ejecución en Android:
-Desde la terminal PowerShell o CMD:
+### Características del Modo Multijugador:
+- **Roles Host / Cliente:** Un jugador hospeda la sesión y el otro se une desde el listado de dispositivos vinculados.
+- **Sincronización Estricta de Turnos:** Cada jugador opera en su propia cuadrícula de defensa y ataca la red remota. El Anfitrión abre el juego con el Turno 1. La interfaz bloquea ataques fuera de turno con un banner visual claro:
+  - `🟢 ¡TU TURNO DE ATACAR!`
+  - `⏳ TURNO DEL CONTRINCANTE (Esperando disparo...)`
+- **Tolerancia a Duplicados y Desconexión:** Cada paquete incluye un contador de secuencia `seq`. Paquetes repetidos o desordenados son descartados automáticamente. Si un jugador abandona, el socket se libera sin generar cuelgues ni excepciones.
+
+### Integración de Sensores en el Juego:
+1. **Apuntado Cinético por Giroscopio:** Al inclinar el teléfono en cualquier dirección, un retículo de mira cian de alta visibilidad recorre las 64 celdas del tablero (A1 a H8) reflejando los ángulos de pitch y roll del giroscopio. El botón `Disparar Mira` permite ejecutar el disparo en la coordenada exacta seleccionada por movimiento.
+2. **Recarga Cinética por Agitación:** Agitar el teléfono con vigor transmite energía cinética a los condensadores del juego, otorgando **+5 EN de Energía Táctica** para desbloquear habilidades como *Ping Sweep* o *DDoS Attack*. Para balancear el juego y evitar abusos, se incorpora un **temporizador de enfriamiento de 15 segundos** con contador decreciente en el HUD.
+
+---
+
+## 🧪 Matriz Exhaustiva de Pruebas (QA)
+
+| ID | Módulo | Categoría | Objetivo de la Prueba | Resultado | Estado |
+|:---:|:---:|:---:|:---|:---|:---:|
+| **CP-01** | Gestor | Hardware | Telemetría en tiempo real de Acelerómetro y Giroscopio ($X,Y,Z$, $m/s^2$, $rad/s$) y desregistro en `onPause`. | Telemetría precisa y liberación inmediata de recursos. | **EXITOSO** |
+| **CP-02** | Gestor | Gestos | Desplazamiento panorámico *tilt-to-pan* en imágenes y detección de agitación con debouncing de 800ms. | Desplazamiento fluido y disparo de acción contextual. | **EXITOSO** |
+| **CP-03** | Gestor | Seguridad | Bloqueo biométrico con `BiometricPrompt` y acceso a la Bóveda Segura de archivos. | Desbloqueo estricto sólo ante huella/PIN válido. | **EXITOSO** |
+| **CP-04** | Gestor | Red P2P | Emparejamiento Bluetooth, handshake de metadatos y diálogo de confirmación explícita. | Transferencia condicionada a aceptación manual del receptor. | **EXITOSO** |
+| **CP-05** | Gestor | Red P2P | Fragmentación en paquetes de 4 KB con Stop-and-Wait ACK y cancelación limpia a mitad de proceso. | Barra de progreso fluida y purga del archivo temporal `.tmp`. | **EXITOSO** |
+| **CP-06** | Gestor | Integridad | Verificación matemática de SHA-256 e historial de transferencias con estados. | Coincidencia de hash al 100% y renombrado atómico. | **EXITOSO** |
+| **CP-07** | Gestor | Red Relay | Proxy Web Bluetooth: Dispositivo B offline consulta API pública vía pasarela Dispositivo A. | Visualización de respuesta HTTP 200 OK sin conexión local. | **EXITOSO** |
+| **CP-08** | Gestor | Seguridad | Mitigación SSRF (bloqueo de IPs privadas) y persistencia en caché local con timestamp. | Rechazo a endpoints no autorizados y fallback a caché. | **EXITOSO** |
+| **CP-09** | Videojuego | Red P2P | Duelo multijugador 1v1 Bluetooth sincronizado con validación estricta de turnos en Cyber Breach. | Alternancia perfecta de turnos y sincronización de cuadrículas. | **EXITOSO** |
+| **CP-10** | Videojuego | Sensores | Apuntado de retícula por giroscopio y recarga cinética (+5 EN) por agitación con enfriamiento de 15s. | Retículo cian reactivo y recarga con temporizador decreciente. | **EXITOSO** |
+
+---
+
+## 📸 Guía de Evidencias y Capturas (Dispositivo Físico Samsung Galaxy A54)
+
+Para la entrega formal y la evaluación técnica, se integran las evidencias obtenidas ejecutando las aplicaciones en el dispositivo físico **Samsung Galaxy A54**:
+
+### Parte 1: Gestor de Archivos Multiplataforma
+
+| Caso Evaluado | Captura de Pantalla Real (Samsung Galaxy A54) | Descripción Técnica del Comportamiento |
+| :--- | :---: | :--- |
+| **Giroscopio & Tilt-to-Pan (HUD Inclinación)** | <img src="docs/capturas/parte1/02_visor_imagen_inclinacion_hud.jpg" width="220" alt="HUD Telemetría Inclinación" /> | Visor de imagen con telemetría en vivo, burbuja de nivel 2D, badge `[ACTIVO]` en verde y cálculo en tiempo real de Pitch, Roll y Offset de paneo al inclinar el teléfono. |
+| **Bóveda Segura & Biometría (Acceso)** | <img src="docs/capturas/parte1/boveda_protegida_acceso_autorizado_archivos.jpg" width="220" alt="Bóveda Desbloqueada" /> | Desbloqueo exitoso de la bóveda mediante autenticación biométrica (`BiometricPrompt` con huella dactilar/PIN). |
+| **Bóveda Segura (Archivos Protegidos)** | <img src="docs/capturas/parte1/boveda_protegida_archivos.jpg" width="220" alt="Archivos Bóveda" /> | Exploración autorizada de archivos confidenciales resguardados en almacenamiento privado con cifrado en memoria. |
+| **Transferencia Bluetooth & Compatibilidad** | <img src="docs/capturas/parte1/03_bluetooth_seleccion_archivo_iphone_incompatible.jpg" width="220" alt="Selección Bluetooth" /> | Menú con chips limpios `[Imagen]`, `[Archivo 1]`, `[Archivo 2]`, validación de dispositivos detectados y reporte de compatibilidad de pares. |
+| **Recepción de Archivos por Bluetooth** | <img src="docs/capturas/parte1/05_bluetooth_recepcion_archivos.jpg" width="220" alt="Recepción Bluetooth" /> | Solicitud entrante con nombre de archivo, metadatos y diálogo modal de aceptación explícita previo a la transmisión. |
+| **Historial de Transferencias & SHA-256** | <img src="docs/capturas/parte1/05_bluetooth_historial_completado.jpg" width="220" alt="Historial Transferencias" /> | Registro histórico con archivo transferido, tamaño, estado `EXITOSO`, marca de tiempo y verificación íntegra del hash SHA-256. |
+| **Proxy Relay Web (Menú de Selección)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_menu.jpg" width="220" alt="Menú Proxy Relay" /> | Diálogo de consulta web vía Bluetooth proxy relay con chips de presets (`Posts`, `Hora CDMX`, `PokeAPI`). |
+| **Proxy Relay Web (Respuesta Posts JSON)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_posts.jpg" width="220" alt="Respuesta Posts" /> | Recepción de payload JSON desde endpoint REST a través del salto proxy Bluetooth sin conexión directa a internet. |
+| **Proxy Relay Web (Respuesta PokeAPI)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_pokeapi.jpg" width="220" alt="Respuesta PokeAPI" /> | Respuesta HTTP 200 OK con payload de API pública retransmitido íntegramente por el enlace Bluetooth local. |
+| **Mitigación SSRF (IP Privada Prohibida)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_ipprivada_prohibida.jpg" width="220" alt="Protección SSRF" /> | Mecanismo de seguridad que rechaza de forma estricta peticiones dirigidas a IPs privadas o locales (prevención SSRF). |
+
+### Parte 2: Videojuego Cyber Breach
+*(Capturas correspondientes al ciberduelo multijugador Bluetooth 1v1 y sensores en combate en proceso de integración)*
+1. **Lobby Multijugador Bluetooth:** Diálogo de selección de rol (Hospedar / Unirse) con el listado de dispositivos vinculados.
+2. **Banner de Turno Sincronizado 1v1:** Tablero táctico 8×8 con el banner superior `🟢 ¡TU TURNO DE ATACAR!` y estado del oponente.
+3. **Mira Cinética de Giroscopio en Cuadrícula:** Celda destacada con retícula cian en la cuadrícula enemiga y coordenadas activas en el HUD.
+4. **Recarga Cinética por Agitación:** Notificación en el HUD de `¡Recarga Cinética por Agitación! +5 EN` y temporizador de enfriamiento decreciente.
+
+---
+
+## 🚀 Instrucciones de Compilación y Ejecución
+
+### Requisitos Previos:
+- **Android Studio:** Ladybug (2024.2.1) o superior con JDK 17 o 21 (JBR recomendado).
+- **Android SDK:** API Level 35 (Android 15) instalado con Build Tools 35.0.0.
+- **Dispositivo de Prueba:** Dispositivo físico Android (API 24+) con Bluetooth y Sensores activos (ej. Samsung Galaxy A54) o Emulador con Virtual Sensors habilitados.
+
+### Compilación desde Terminal / Consola:
 
 ```powershell
-# Configurar JAVA_HOME con el JDK de Android Studio
-$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+# Compilar Parte 1: Gestor de Archivos
+cd "parte1_gestor_archivos"
+.\gradlew.bat :androidApp:assembleDebug
 
-# Compilar Parte 1 (Gestor de Archivos)
-cd D:\Manny\DocumentsD\Moviles\P4\practica4_Moviles\parte1_gestor_archivos
-.\gradlew.bat assembleDebug
-
-# Compilar Parte 2 (Cyber Breach)
-cd D:\Manny\DocumentsD\Moviles\P4\practica4_Moviles\parte2_cyber_breach
-.\gradlew.bat assembleDebug
+# Compilar Parte 2: Videojuego Cyber Breach
+cd "..\parte2_cyber_breach"
+.\gradlew.bat :androidApp:assembleDebug
 ```
 
-Los APKs generados se ubican en:
+Los paquetes APK generados listos para instalación se localizan en:
 - `parte1_gestor_archivos/androidApp/build/outputs/apk/debug/androidApp-debug.apk`
 - `parte2_cyber_breach/androidApp/build/outputs/apk/debug/androidApp-debug.apk`
 
-También pueden abrirse directamente en **Android Studio** (menú `File > Open...` seleccionando cualquiera de las dos carpetas) y ejecutarse con el botón **Run ▶**.
-
-### 2. Preparación y Compilación en iOS (Xcode / macOS):
-El módulo compartido genera el framework nativo estático `SharedFileManager.framework` y `SharedCyberBreach.framework` para arquitecturas x86_64 y arm64 (simulador y dispositivo):
-
-```bash
-# Compilar framework KMP para iOS
-./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
-```
-
-En macOS, abrir el proyecto Xcode o el workspace correspondiente, vincular el framework compartido generado en la ruta `shared/build/bin/iosSimulatorArm64/debugFramework/` y ejecutar en el simulador de iPhone (iOS 15 o superior).
-
 ---
 
-## 💡 Conclusiones
+## 📚 Conclusiones Técnicas y Referencias APA
 
-1. **Flexibilidad y Robustez de Kotlin Multiplatform (KMP):**  
-   La adopción de KMP permitió centralizar el 100% de la lógica de negocio (el motor de escaneo de red, el analizador léxico de sintaxis y los serializadores de archivos en TXT, XML y JSON) en código común reutilizable, garantizando paridad exacta entre Android e iOS sin duplicar pruebas unitarias ni lógica de persistencia.
+### Conclusiones Técnicas:
+1. **Independencia de Plataforma con KMP:** La abstracción de servicios de hardware mediante contratos `expect`/`actual` e interfaces puras en `commonMain` permitió aislar la lógica de negocio y las máquinas de estados de los detalles específicos del SDK de Android, dejando la arquitectura lista para la implementación homóloga en iOS mediante CoreMotion y MultipeerConnectivity.
+2. **Eficiencia y Seguridad en Redes Ad-Hoc:** El empleo de RFCOMM con paquetes delimitados y confirmación secuencial demostró ser altamente confiable en entornos de corta distancia, permitiendo transmisiones binarias e interoperabilidad HTTP sin depender de infraestructura centralizada ni servicios de terceros.
+3. **Diseño Consciente de Hardware y Batería:** La integración rigurosa del ciclo de vida de actividades (`onPause`/`onResume`) para desregistrar oyentes de sensores garantiza que la aplicación no incurra en penalizaciones de rendimiento ni consumo parásito de energía.
 
-2. **Gestión Segura del Almacenamiento Móvil:**  
-   Tanto en Android moderno (Scoped Storage y Storage Access Framework) como en iOS (Sandbox), la manipulación de archivos exige una arquitectura defensiva que no asuma rutas fijas ni permisos globales. La implementación de validaciones estrictas y la gestión de archivos mediante almacenamiento privado y `FileProvider` garantiza aplicaciones 100% seguras y libres de fugas de datos.
-
-3. **Interoperabilidad de Datos Multi-Formato:**  
-   El desarrollo del módulo Cyber Breach demostró la importancia de modelar el estado del juego mediante tipos primitivos y arreglos discretos, lo que facilitó generar representaciones equivalentes y parseables en texto plano, estructuras jerárquicas XML y esquemas JSON tipados.
-
----
-
-## 📚 Bibliografía (Formato APA)
-
-1. JetBrains. (2024). *Kotlin Multiplatform Development: Get started with shared logic and native UIs*. JetBrains Documentation. Recuperado de https://kotlinlang.org/docs/multiplatform.html
-2. Google Developers. (2024). *Data and file storage overview on Android*. Android Developers Documentation. Recuperado de https://developer.android.com/training/data-storage
-3. Google Developers. (2024). *Access documents and other files from shared storage (Storage Access Framework)*. Android Developers Documentation. Recuperado de https://developer.android.com/training/data-storage/shared/documents-files
-4. Apple Inc. (2024). *File System Basics and Document Picker Programming Guide*. Apple Developer Documentation. Recuperado de https://developer.apple.com/documentation/uikit/view_controllers/providing_access_to_directories
-5. Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1994). *Design Patterns: Elements of Reusable Object-Oriented Software*. Addison-Wesley.
+### Referencias Bibliográficas (Formato APA 7ma Edición):
+- Android Developers. (2024). *Sensors overview & SensorManager documentation*. Google Developers. https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview
+- Android Developers. (2024). *Bluetooth RFCOMM and device pairing guide*. Google Developers. https://developer.android.com/develop/connectivity/bluetooth
+- Android Developers. (2024). *BiometricPrompt API reference*. Google Developers. https://developer.android.com/reference/androidx/biometric/BiometricPrompt
+- JetBrains. (2024). *Kotlin Multiplatform overview and shared code architecture*. JetBrains s.r.o. https://kotlinlang.org/docs/multiplatform.html
+- Martin, R. C. (2018). *Clean Architecture: A craftsman's guide to software structure and design*. Prentice Hall.

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DriveFileMove
 import androidx.compose.material.icons.filled.Edit
@@ -56,6 +57,7 @@ fun FileItemRow(
     onCopy: () -> Unit,
     onMove: () -> Unit,
     onDetails: () -> Unit,
+    onBluetoothSend: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -154,6 +156,16 @@ fun FileItemRow(
                             onDetails()
                         }
                     )
+                    if (!item.isDirectory) {
+                        DropdownMenuItem(
+                            text = { Text("Enviar por Bluetooth") },
+                            leadingIcon = { Icon(Icons.Default.Bluetooth, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
+                            onClick = {
+                                menuExpanded = false
+                                onBluetoothSend()
+                            }
+                        )
+                    }
                     DropdownMenuItem(
                         text = { Text("Renombrar") },
                         leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },

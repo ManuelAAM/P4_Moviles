@@ -1,14 +1,20 @@
 package com.escom.ipn.p4.cyberbreach.viewmodel
 
+import com.escom.ipn.p4.cyberbreach.model.CELL_HIDDEN
+import com.escom.ipn.p4.cyberbreach.model.CyberBreachPacket
 import com.escom.ipn.p4.cyberbreach.model.CyberTheme
 import com.escom.ipn.p4.cyberbreach.model.GameMode
+import com.escom.ipn.p4.cyberbreach.model.GamePacketType
 import com.escom.ipn.p4.cyberbreach.model.GameState
+import com.escom.ipn.p4.cyberbreach.model.IGameSensorListener
+import com.escom.ipn.p4.cyberbreach.model.IGameSensorManager
 import com.escom.ipn.p4.cyberbreach.model.SaveFormat
 import com.escom.ipn.p4.cyberbreach.model.SaveMetadata
 import com.escom.ipn.p4.cyberbreach.model.SkillType
 import com.escom.ipn.p4.cyberbreach.repository.IGameSaveRepository
 import com.escom.ipn.p4.cyberbreach.service.GameEngine
 import com.escom.ipn.p4.cyberbreach.service.IAudioService
+import com.escom.ipn.p4.cyberbreach.service.IBluetoothGameService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,12 +44,19 @@ data class CyberBreachUiState(
     val rawViewingContent: String? = null,
     val rawViewingTitle: String? = null,
     val rawViewingFormat: SaveFormat? = null,
-    val activeFilterCategory: String = "Todas"
+    val activeFilterCategory: String = "Todas",
+    // Práctica 6: Multijugador Bluetooth y Sensores
+    val isBluetoothLobbyOpen: Boolean = false,
+    val isHosting: Boolean = false,
+    val bluetoothPairedDevices: List<Pair<String, String>> = emptyList(),
+    val bluetoothStatusText: String = "Desconectado"
 )
 
 class CyberBreachViewModel(
     private val saveRepository: IGameSaveRepository,
     private val audioService: IAudioService,
+    val sensorManager: IGameSensorManager? = null,
+    val bluetoothService: IBluetoothGameService? = null,
     private val coroutineScope: CoroutineScope = CoroutineScope(Dispatchers.Main)
 ) {
 
@@ -56,6 +69,142 @@ class CyberBreachViewModel(
         loadSavedGamesList()
         restoreActiveSessionIfAny()
         startTimerLoop()
+        setupSensorListeners()
+        setupBluetoothListeners()
+    }
+
+    private fun setupSensorListeners() {
+        sensorManager?.startListening(object : IGameSensorListener {
+            override fun onTiltAiming(targetCell: Int, pitch: Float, roll: Float) {
+                val current = _uiState.value.gameState
+                if (_uiState.value.currentScreen == CyberScreen.GAMEPLAY && !current.isGameOver) {
+                    val nextState = GameEngine.updateSensorTarget(current, targetCell)
+                    _uiState.update { it.copy(gameState = nextState) }
+                }
+            }
+
+            override fun onKineticShake() {
+                val current = _uiState.value.gameState
+                if (_uiState.value.currentScreen == CyberScreen.GAMEPLAY && !current.isGameOver) {
+                    val (nextState, feedback) = GameEngine.applyKineticShake(current)
+                    if (nextState.playerEnergy > current.playerEnergy) {
+                        audioService.playSkill()
+                    }
+                    _uiState.update { it.copy(gameState = nextState, statusMessage = feedback) }
+                }
+            }
+        })
+    }
+
+    private fun setupBluetoothListeners() {
+        val bt = bluetoothService ?: return
+        coroutineScope.launch {
+            bt.incomingPacket.collect { packet ->
+                if (packet != null) {
+                    handleIncomingPacket(packet)
+                }
+            }
+        }
+        coroutineScope.launch {
+            bt.pairedDevices.collect { list ->
+                _uiState.update { it.copy(bluetoothPairedDevices = list) }
+            }
+        }
+        coroutineScope.launch {
+            bt.connectionStatusMessage.collect { msg ->
+                _uiState.update { it.copy(bluetoothStatusText = msg) }
+            }
+        }
+        coroutineScope.launch {
+            bt.isConnected.collect { connected ->
+                if (connected) {
+                    _uiState.update {
+                        it.copy(
+                            currentScreen = CyberScreen.GAMEPLAY,
+                            isBluetoothLobbyOpen = false,
+                            statusMessage = "¡Enlace Bluetooth P2P activo!"
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private fun handleIncomingPacket(packet: CyberBreachPacket) {
+        val current = _uiState.value.gameState
+        when (packet.type) {
+            GamePacketType.HANDSHAKE -> {
+                val oppName = packet.senderName.ifBlank { "Contrincante" }
+                val nextState = current.copy(
+                    opponentName = oppName,
+                    isBluetoothSession = true,
+                    bluetoothStatusMessage = if (current.isHost) "¡Tu turno de atacar!" else "Esperando jugada de $oppName..."
+                )
+                _uiState.update {
+                    it.copy(
+                        gameState = nextState,
+                        currentScreen = CyberScreen.GAMEPLAY,
+                        isBluetoothLobbyOpen = false,
+                        statusMessage = "¡Conexión establecida con $oppName!"
+                    )
+                }
+            }
+            GamePacketType.ATTACK -> {
+                val timestamp = "Turno ${current.turns + 1}"
+                val (nextState, responsePacket) = GameEngine.handleIncomingRemoteAttack(
+                    currentState = current,
+                    incomingSeq = packet.seq,
+                    targetCell = packet.targetCell,
+                    skill = packet.skill,
+                    senderName = packet.senderName,
+                    timestamp = timestamp
+                )
+                if (nextState.isDefeat) {
+                    audioService.playAlarm()
+                } else if (responsePacket.hitResult != "MISS") {
+                    audioService.playAlarm()
+                } else {
+                    audioService.playMiss()
+                }
+                bluetoothService?.sendPacket(responsePacket)
+                _uiState.update {
+                    it.copy(
+                        gameState = nextState,
+                        statusMessage = "Ataque de ${packet.senderName} recibido en casilla ${packet.targetCell}. ¡Tu turno!"
+                    )
+                }
+            }
+            GamePacketType.ATTACK_RESULT -> {
+                val timestamp = "Turno ${current.turns + 1}"
+                val (nextState, feedback) = GameEngine.applyRemoteAttackResult(
+                    currentState = current,
+                    resultPacket = packet,
+                    timestamp = timestamp
+                )
+                if (nextState.isVictory) {
+                    audioService.playVictory()
+                } else if (packet.hitResult != "MISS") {
+                    audioService.playHit()
+                } else {
+                    audioService.playMiss()
+                }
+                _uiState.update {
+                    it.copy(
+                        gameState = nextState,
+                        statusMessage = feedback
+                    )
+                }
+            }
+            GamePacketType.DISCONNECT -> {
+                _uiState.update {
+                    it.copy(
+                        statusMessage = "El oponente ${current.opponentName} se ha desconectado.",
+                        gameState = it.gameState.copy(bluetoothStatusMessage = "Conexión cerrada por el oponente")
+                    )
+                }
+            }
+            else -> {}
+        }
     }
 
     private fun restoreActiveSessionIfAny() {
@@ -80,11 +229,14 @@ class CyberBreachViewModel(
                 val current = _uiState.value.gameState
                 if (_uiState.value.currentScreen == CyberScreen.GAMEPLAY && !current.isGameOver) {
                     val nextElapsed = current.elapsedSeconds + 1
-                    val updatedState = current.copy(elapsedSeconds = nextElapsed)
+                    val cooledState = if (current.kineticCooldownSeconds > 0) {
+                        GameEngine.decrementKineticCooldown(current)
+                    } else current
+                    val updatedState = cooledState.copy(elapsedSeconds = nextElapsed)
                     _uiState.update { it.copy(gameState = updatedState) }
 
-                    // Auto-guardado periódico
-                    if (nextElapsed % 5 == 0) {
+                    // Auto-guardado periódico (excepto en multijugador Bluetooth volátil)
+                    if (nextElapsed % 5 == 0 && current.gameMode != GameMode.BLUETOOTH_P2P) {
                         saveRepository.saveActiveSession(updatedState)
                     }
                 }
@@ -108,10 +260,11 @@ class CyberBreachViewModel(
             it.copy(
                 gameState = fresh,
                 currentScreen = CyberScreen.GAMEPLAY,
-                statusMessage = if (mode == GameMode.INFILTRATION)
-                    "Infiltración en solitario iniciada. Neutraliza la red enemiga."
-                else
-                    "Cyber Duelo 1v1 iniciado. ¡Defiende tu infraestructura del contraataque!"
+                statusMessage = when (mode) {
+                    GameMode.INFILTRATION -> "Infiltración en solitario iniciada. Neutraliza la red enemiga."
+                    GameMode.CPU_DUEL -> "Cyber Duelo 1v1 vs CPU iniciado. ¡Defiende tu infraestructura!"
+                    GameMode.BLUETOOTH_P2P -> "Combate Bluetooth local 1v1."
+                }
             )
         }
         audioService.playClick()
@@ -123,7 +276,9 @@ class CyberBreachViewModel(
     fun returnToMainMenu() {
         audioService.playClick()
         coroutineScope.launch {
-            saveRepository.saveActiveSession(_uiState.value.gameState)
+            if (_uiState.value.gameState.gameMode != GameMode.BLUETOOTH_P2P) {
+                saveRepository.saveActiveSession(_uiState.value.gameState)
+            }
             loadSavedGamesList()
         }
         _uiState.update { it.copy(currentScreen = CyberScreen.TITLE_MENU) }
@@ -133,10 +288,50 @@ class CyberBreachViewModel(
         val current = _uiState.value.gameState
         if (current.isGameOver) return
 
+        // MODO BLUETOOTH P2P
+        if (current.gameMode == GameMode.BLUETOOTH_P2P) {
+            if (!current.isMyTurn) {
+                _uiState.update { it.copy(errorMessage = "Espera tu turno. El contrincante está atacando.") }
+                return
+            }
+            if (current.grid[cellIndex] != CELL_HIDDEN) {
+                _uiState.update { it.copy(errorMessage = "Casilla ya atacada previamente.") }
+                return
+            }
+
+            val attackSeq = current.turns + 1
+            val packet = CyberBreachPacket(
+                type = GamePacketType.ATTACK,
+                seq = attackSeq,
+                senderName = "Yo",
+                targetCell = cellIndex,
+                skill = current.activeSkill,
+                timestamp = System.currentTimeMillis()
+            )
+
+            val sent = bluetoothService?.sendPacket(packet) ?: false
+            if (sent) {
+                audioService.playClick()
+                val nextState = current.copy(
+                    isMyTurn = false,
+                    bluetoothStatusMessage = "Ataque enviado a casilla $cellIndex. Esperando confirmación..."
+                )
+                _uiState.update {
+                    it.copy(
+                        gameState = nextState,
+                        statusMessage = "Ataque transmitido por Bluetooth. Esperando respuesta..."
+                    )
+                }
+            } else {
+                _uiState.update { it.copy(errorMessage = "Error de comunicación Bluetooth con el oponente.") }
+            }
+            return
+        }
+
+        // MODO SOLITARIO O CPU DUEL
         val timestamp = "Turno ${current.turns + 1}"
         val (nextState, feedback) = GameEngine.executeTurn(current, cellIndex, timestamp)
 
-        // Audio feedback
         if (nextState.isVictory) {
             audioService.playVictory()
         } else if (nextState.isDefeat) {
@@ -149,7 +344,6 @@ class CyberBreachViewModel(
                 val prevNode = current.playerNodes.find { it.id == pNode.id }
                 prevNode != null && pNode.hits > prevNode.hits
             }) {
-            // CPU nos golpeó
             audioService.playAlarm()
         } else {
             audioService.playMiss()
@@ -164,6 +358,26 @@ class CyberBreachViewModel(
 
         coroutineScope.launch {
             saveRepository.saveActiveSession(nextState)
+        }
+    }
+
+    fun fireAtSensorTarget() {
+        val target = _uiState.value.gameState.targetedCellBySensor
+        if (target != null) {
+            onCellClicked(target)
+        } else {
+            _uiState.update { it.copy(errorMessage = "Inclina el dispositivo para apuntar con el giroscopio.") }
+        }
+    }
+
+    fun triggerManualKineticShake() {
+        val current = _uiState.value.gameState
+        if (!current.isGameOver) {
+            val (nextState, feedback) = GameEngine.applyKineticShake(current)
+            if (nextState.playerEnergy > current.playerEnergy) {
+                audioService.playSkill()
+            }
+            _uiState.update { it.copy(gameState = nextState, statusMessage = feedback) }
         }
     }
 
@@ -184,6 +398,52 @@ class CyberBreachViewModel(
             )
         }
     }
+
+    // --- MÉTODOS DE BLUETOOTH LOBBY ---
+
+    fun openBluetoothLobby() {
+        bluetoothService?.refreshPairedDevices()
+        _uiState.update { it.copy(isBluetoothLobbyOpen = true) }
+    }
+
+    fun closeBluetoothLobby() {
+        _uiState.update { it.copy(isBluetoothLobbyOpen = false) }
+    }
+
+    fun hostBluetoothGame() {
+        val fresh = GameEngine.startNewGame(
+            mode = GameMode.BLUETOOTH_P2P,
+            isHost = true,
+            opponentName = "Esperando jugador..."
+        )
+        _uiState.update { it.copy(gameState = fresh, isHosting = true) }
+        bluetoothService?.startHosting("Jugador 1 (Host)")
+    }
+
+    fun connectToBluetoothHost(deviceAddress: String, hostName: String) {
+        val fresh = GameEngine.startNewGame(
+            mode = GameMode.BLUETOOTH_P2P,
+            isHost = false,
+            opponentName = hostName
+        )
+        _uiState.update { it.copy(gameState = fresh, isHosting = false) }
+        bluetoothService?.connectToHost(deviceAddress, "Jugador 2 (Cliente)")
+    }
+
+    fun disconnectBluetooth() {
+        bluetoothService?.disconnect()
+        _uiState.update { it.copy(isHosting = false) }
+    }
+
+    fun onPause() {
+        sensorManager?.stopListening()
+    }
+
+    fun onResume() {
+        setupSensorListeners()
+    }
+
+    // --- GUARDADO Y PERSISTENCIA ---
 
     fun saveGame(title: String, categoryTag: String, format: SaveFormat = _uiState.value.preferredFormat) {
         coroutineScope.launch {
