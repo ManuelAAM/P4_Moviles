@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.CrisisAlert
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.PlayArrow
@@ -65,7 +66,8 @@ fun TitleMenuScreen(
     onStartGame: (GameMode) -> Unit,
     onResumeGame: () -> Unit,
     onOpenSavesManager: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenBluetoothLobby: () -> Unit = {}
 ) {
     var showModeSelector by remember { mutableStateOf(false) }
 
@@ -190,6 +192,30 @@ fun TitleMenuScreen(
                 Text(
                     text = "NUEVA INCURSIÓN",
                     fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Botón 2.5: Ciberduelo Bluetooth 1v1 (Práctica 6)
+            Button(
+                onClick = onOpenBluetoothLobby,
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                )
+            ) {
+                Icon(Icons.Default.Bluetooth, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "CIBERDUELO BLUETOOTH (1v1)",
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 )
@@ -325,6 +351,15 @@ fun ModeSelectionDialog(
                     badge = "MODO VERSUS",
                     description = "¡Combate 1v1 por turnos! Tras cada ataque tuyo a la red enemiga, la CPU contraataca tu infraestructura. Neutraliza sus nodos antes de que destruyan los tuyos.",
                     onClick = { onSelectMode(GameMode.CPU_DUEL) }
+                )
+
+                // Modo 3: Ciberduelo Bluetooth 1v1 (Práctica 6)
+                ModeCard(
+                    icon = Icons.Default.Bluetooth,
+                    title = "Ciberduelo Bluetooth 1v1",
+                    badge = "P2P LOCAL",
+                    description = "Batalla táctica 1v1 sincronizada por Bluetooth RFCOMM con apuntado por giroscopio, recarga cinética por agitación y validación estricta de turnos.",
+                    onClick = { onSelectMode(GameMode.BLUETOOTH_P2P) }
                 )
             }
         },
