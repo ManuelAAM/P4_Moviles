@@ -27,6 +27,10 @@ class IosFileManagerRepository : IFileManagerRepository {
         return Result.success("Contenido simulado en iOS Sandbox para $filePath")
     }
 
+    override suspend fun readFileBytes(filePath: String): Result<ByteArray> {
+        return Result.success("Contenido simulado en iOS Sandbox para $filePath".encodeToByteArray())
+    }
+
     override suspend fun writeFileText(filePath: String, content: String): Result<Unit> {
         return Result.success(Unit)
     }

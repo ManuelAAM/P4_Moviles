@@ -40,4 +40,5 @@ interface IBluetoothTransferService {
     
     // Método para simulación de transferencias y pruebas locales
     fun simulateTransfer(fileName: String, mimeType: String, bytes: ByteArray, asSender: Boolean)
+    fun injectIncomingOffer(offer: FileTransferMetadataPacket)
 }

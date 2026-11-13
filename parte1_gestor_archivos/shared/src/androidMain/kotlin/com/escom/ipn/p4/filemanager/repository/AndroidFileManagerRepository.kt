@@ -125,6 +125,29 @@ class AndroidFileManagerRepository(
                 e.printStackTrace()
             }
         }
+
+        // Garantizar que la imagen de ejemplo para pruebas de sensores esté disponible en Documentos y en Raíz
+        try {
+            val docsDir = File(root, "Documentos")
+            if (!docsDir.exists()) docsDir.mkdirs()
+            val sampleImgDocs = File(docsDir, "imagen_ejemplo_petergriffin.jpg")
+            if (!sampleImgDocs.exists() || sampleImgDocs.length() == 0L) {
+                context.assets.open("imagen_ejemplo_petergriffin.jpg").use { input ->
+                    sampleImgDocs.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+
+            val sampleImgRoot = File(root, "imagen_ejemplo_petergriffin.jpg")
+            if (!sampleImgRoot.exists() || sampleImgRoot.length() == 0L) {
+                context.assets.open("imagen_ejemplo_petergriffin.jpg").use { input ->
+                    sampleImgRoot.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        } catch (ignored: Exception) {}
     }
 
     override suspend fun getRootDirectories(): List<FileItem> = withContext(Dispatchers.IO) {
@@ -172,6 +195,19 @@ class AndroidFileManagerRepository(
             val text = file.readText(Charsets.UTF_8)
             addRecent(filePath)
             Result.success(text)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun readFileBytes(filePath: String): Result<ByteArray> = withContext(Dispatchers.IO) {
+        try {
+            val file = if (File(filePath).isAbsolute) File(filePath) else File(context.filesDir, filePath)
+            if (!file.exists()) return@withContext Result.failure(Exception("El archivo no existe."))
+            if (file.isDirectory) return@withContext Result.failure(Exception("La ruta indicada es un directorio."))
+            val bytes = file.readBytes()
+            addRecent(file.absolutePath)
+            Result.success(bytes)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -50,6 +50,18 @@ class AndroidSensorManager(
     private var isListening = false
     private var isSimulationMode = false
     private var lastShakeTimestamp = 0L
+    private var lastAccelUiTimestamp = 0L
+    private var lastGyroUiTimestamp = 0L
+    private var lastTiltUiTimestamp = 0L
+
+    // Filtros pasa-bajas para estabilidad de visualización en pantalla
+    private var smoothedAccelX = 0f
+    private var smoothedAccelY = 9.8f
+    private var smoothedAccelZ = 0f
+
+    private var smoothedGyroX = 0f
+    private var smoothedGyroY = 0f
+    private var smoothedGyroZ = 0f
 
     override fun isSensorAvailable(type: SensorType): Boolean {
         return when (type) {
@@ -126,44 +138,72 @@ class AndroidSensorManager(
                 val z = event.values[2]
                 val mag = sqrt(x * x + y * y + z * z)
 
-                _accelerometerFlow.value = SensorData(
-                    type = SensorType.ACCELEROMETER,
-                    x = x,
-                    y = y,
-                    z = z,
-                    magnitude = mag,
-                    timestampMillis = now,
-                    accuracy = event.accuracy,
-                    isSimulated = false,
-                    status = SensorStatus.ACTIVE
-                )
+                // 1. Detección inmediata de agitación con aceleración bruta sin retraso
+                if (mag > 13.5f && (now - lastShakeTimestamp > 650L)) {
+                    lastShakeTimestamp = now
+                    _shakeEventFlow.value = now
+                }
 
-                processMotion(x, y, z, mag, now)
+                // 2. Filtro pasa-bajas para números estables y sin brincos visuales
+                smoothedAccelX += 0.25f * (x - smoothedAccelX)
+                smoothedAccelY += 0.25f * (y - smoothedAccelY)
+                smoothedAccelZ += 0.25f * (z - smoothedAccelZ)
+                val smoothedMag = sqrt(smoothedAccelX * smoothedAccelX + smoothedAccelY * smoothedAccelY + smoothedAccelZ * smoothedAccelZ)
+
+                // 3. Emisión a UI con limitador de refresco (cada 120 ms = 8.3 fps estables)
+                if (now - lastAccelUiTimestamp >= 120L) {
+                    lastAccelUiTimestamp = now
+                    _accelerometerFlow.value = SensorData(
+                        type = SensorType.ACCELEROMETER,
+                        x = smoothedAccelX,
+                        y = smoothedAccelY,
+                        z = smoothedAccelZ,
+                        magnitude = smoothedMag,
+                        timestampMillis = now,
+                        accuracy = event.accuracy,
+                        isSimulated = false,
+                        status = SensorStatus.ACTIVE
+                    )
+                }
+
+                // 4. Orientación panorámica suave (Tilt-to-Pan a ~20 fps)
+                if (now - lastTiltUiTimestamp >= 50L) {
+                    lastTiltUiTimestamp = now
+                    processMotion(smoothedAccelX, smoothedAccelY, smoothedAccelZ, smoothedMag, now)
+                }
             }
             Sensor.TYPE_GYROSCOPE -> {
                 val x = event.values[0]
                 val y = event.values[1]
                 val z = event.values[2]
-                val mag = sqrt(x * x + y * y + z * z)
 
-                _gyroscopeFlow.value = SensorData(
-                    type = SensorType.GYROSCOPE,
-                    x = x,
-                    y = y,
-                    z = z,
-                    magnitude = mag,
-                    timestampMillis = now,
-                    accuracy = event.accuracy,
-                    isSimulated = false,
-                    status = SensorStatus.ACTIVE
-                )
+                // Filtro pasa-bajas giroscopio
+                smoothedGyroX += 0.25f * (x - smoothedGyroX)
+                smoothedGyroY += 0.25f * (y - smoothedGyroY)
+                smoothedGyroZ += 0.25f * (z - smoothedGyroZ)
+                val smoothedMag = sqrt(smoothedGyroX * smoothedGyroX + smoothedGyroY * smoothedGyroY + smoothedGyroZ * smoothedGyroZ)
+
+                if (now - lastGyroUiTimestamp >= 120L) {
+                    lastGyroUiTimestamp = now
+                    _gyroscopeFlow.value = SensorData(
+                        type = SensorType.GYROSCOPE,
+                        x = smoothedGyroX,
+                        y = smoothedGyroY,
+                        z = smoothedGyroZ,
+                        magnitude = smoothedMag,
+                        timestampMillis = now,
+                        accuracy = event.accuracy,
+                        isSimulated = false,
+                        status = SensorStatus.ACTIVE
+                    )
+                }
             }
         }
     }
 
     private fun processMotion(x: Float, y: Float, z: Float, magnitude: Float, timestamp: Long) {
         // Detección de agitación (Shake)
-        if (magnitude > 13.5f && (timestamp - lastShakeTimestamp > 600L)) {
+        if (magnitude > 13.5f && (timestamp - lastShakeTimestamp > 650L)) {
             lastShakeTimestamp = timestamp
             _shakeEventFlow.value = timestamp
         }
@@ -173,8 +213,8 @@ class AndroidSensorManager(
         val roll = (atan2(-x.toDouble(), z.toDouble()) * (180.0 / PI)).toFloat()
 
         // Offsets suaves para exploración panorámica (Tilt-to-Pan)
-        val panX = (-roll * 4f).coerceIn(-200f, 200f)
-        val panY = (pitch * 4f).coerceIn(-200f, 200f)
+        val panX = (-roll * 5f).coerceIn(-250f, 250f)
+        val panY = (pitch * 5f).coerceIn(-250f, 250f)
 
         _tiltStateFlow.value = MotionTiltState(
             pitch = pitch,

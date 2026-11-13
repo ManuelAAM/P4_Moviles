@@ -63,4 +63,5 @@ class IosBluetoothService : IBluetoothTransferService {
     }
     override fun clearCache() {}
     override fun simulateTransfer(fileName: String, mimeType: String, bytes: ByteArray, asSender: Boolean) {}
+    override fun injectIncomingOffer(offer: FileTransferMetadataPacket) {}
 }

@@ -261,6 +261,12 @@ class AndroidBluetoothService(
                     _pendingIncomingOfferFlow.value = meta
                 }
             }
+            rawMessage.startsWith("CHUNK:") -> {
+                val chunk = BluetoothProtocolService.deserializeChunk(rawMessage)
+                if (chunk != null) {
+                    handleIncomingChunk(chunk)
+                }
+            }
             rawMessage.startsWith("HTTP_REQ:") -> {
                 // Servidor Gateway: recibe petición de Dispositivo B y hace HTTPS hacia Internet
                 val req = BluetoothProtocolService.deserializeProxyRequest(rawMessage)
@@ -277,6 +283,58 @@ class AndroidBluetoothService(
                 }
             }
         }
+    }
+
+    private fun handleIncomingChunk(chunk: FileChunkPacket) {
+        try {
+            val chunkBytes = Base64.decode(chunk.payloadBase64)
+            val tempFile = File(tempDir, "${chunk.transferId}.tmp")
+            tempFile.appendBytes(chunkBytes)
+
+            val currentRec = _activeTransferFlow.value
+            if (currentRec != null && currentRec.id == chunk.transferId) {
+                _activeTransferFlow.value = currentRec.copy(
+                    transferredBytes = tempFile.length()
+                )
+            }
+
+            if (chunk.chunkIndex >= chunk.totalChunks - 1) {
+                val allBytes = tempFile.readBytes()
+                val calculatedHash = Sha256Util.hash(allBytes)
+                val expectedHash = currentRec?.sha256Expected ?: ""
+
+                val isValid = calculatedHash.equals(expectedHash, ignoreCase = true)
+                if (isValid && currentRec != null) {
+                    val finalFile = File(receivedDir, currentRec.fileName)
+                    tempFile.copyTo(finalFile, overwrite = true)
+                    tempFile.delete()
+
+                    val completed = currentRec.copy(
+                        transferredBytes = finalFile.length(),
+                        status = TransferStatus.COMPLETED,
+                        sha256Calculated = calculatedHash,
+                        completedAt = System.currentTimeMillis()
+                    )
+                    _activeTransferFlow.value = null
+                    _transferHistoryFlow.update { list ->
+                        listOf(completed) + list.filter { it.id != completed.id }
+                    }
+                } else {
+                    tempFile.delete()
+                    currentRec?.let { rec ->
+                        val failed = rec.copy(
+                            status = TransferStatus.FAILED,
+                            errorMessage = "Fallo de integridad SHA-256",
+                            completedAt = System.currentTimeMillis()
+                        )
+                        _activeTransferFlow.value = null
+                        _transferHistoryFlow.update { list ->
+                            listOf(failed) + list.filter { it.id != failed.id }
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     override suspend fun sendFile(
@@ -620,5 +678,9 @@ class AndroidBluetoothService(
                 list.map { if (it.id == transferId) completed else it }
             }
         }
+    }
+
+    override fun injectIncomingOffer(offer: FileTransferMetadataPacket) {
+        _pendingIncomingOfferFlow.value = offer
     }
 }

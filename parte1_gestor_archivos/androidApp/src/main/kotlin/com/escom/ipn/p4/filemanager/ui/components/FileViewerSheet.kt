@@ -20,7 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import java.util.Locale
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -88,6 +92,8 @@ fun FileViewerSheet(
     item: FileItem,
     content: String?,
     tiltPanOffset: Offset = Offset.Zero,
+    tiltPitch: Float = 0f,
+    tiltRoll: Float = 0f,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -165,7 +171,12 @@ fun FileViewerSheet(
                             PlainTextViewer(text = content ?: "(Archivo vacío)")
                         }
                         FileCategory.IMAGE -> {
-                            ImageViewerWithZoom(imagePath = item.path, tiltPanOffset = tiltPanOffset)
+                            ImageViewerWithZoom(
+                                imagePath = item.path,
+                                tiltPanOffset = tiltPanOffset,
+                                tiltPitch = tiltPitch,
+                                tiltRoll = tiltRoll
+                            )
                         }
                         else -> {
                             UnsupportedFormatView(item = item, onShare = { shareFile(context, item) })
@@ -275,11 +286,14 @@ fun PlainTextViewer(text: String) {
 @Composable
 fun ImageViewerWithZoom(
     imagePath: String,
-    tiltPanOffset: Offset = Offset.Zero
+    tiltPanOffset: Offset = Offset.Zero,
+    tiltPitch: Float = 0f,
+    tiltRoll: Float = 0f
 ) {
     var scale by remember { mutableFloatStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     var rotation by remember { mutableFloatStateOf(0f) }
+    var isTiltPanActive by remember { mutableStateOf(true) }
 
     val transformState = rememberTransformableState { zoomChange, panChange, _ ->
         scale = (scale * zoomChange).coerceIn(0.5f, 5f)
@@ -298,15 +312,15 @@ fun ImageViewerWithZoom(
     }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Barra de controles de Zoom y Rotación
+        // Barra superior de controles de Zoom, Rotación y Centrado
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -316,21 +330,20 @@ fun ImageViewerWithZoom(
                     Text(
                         text = "Zoom: ${kotlin.math.round(scale * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
-                Row {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     FilledTonalButton(
                         onClick = { rotation = (rotation + 90f) % 360f },
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                        modifier = Modifier.height(30.dp)
                     ) {
-                        Icon(Icons.Default.RotateRight, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.RotateRight, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Rotar 90°", fontSize = 12.sp)
+                        Text("90°", fontSize = 11.sp)
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
 
                     OutlinedButton(
                         onClick = {
@@ -338,30 +351,32 @@ fun ImageViewerWithZoom(
                             offset = Offset.Zero
                             rotation = 0f
                         },
-                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 2.dp),
+                        modifier = Modifier.height(30.dp)
                     ) {
-                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Reiniciar", fontSize = 12.sp)
+                        Text("Centrar", fontSize = 11.sp)
                     }
                 }
             }
         }
 
+        // Lienzo de la imagen con overlay HUD interactivo de exploración panorámica
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black)
+                .background(Color(0xFF0F172A))
                 .transformable(state = transformState),
             contentAlignment = Alignment.Center
         ) {
             if (bitmap != null) {
-                val effectiveOffsetX = offset.x + if (scale > 1.2f) tiltPanOffset.x else 0f
-                val effectiveOffsetY = offset.y + if (scale > 1.2f) tiltPanOffset.y else 0f
+                val effectiveOffsetX = offset.x + if (isTiltPanActive) tiltPanOffset.x else 0f
+                val effectiveOffsetY = offset.y + if (isTiltPanActive) tiltPanOffset.y else 0f
 
                 Image(
                     bitmap = bitmap.asImageBitmap(),
-                    contentDescription = "Visualizador de imagen interactivo",
+                    contentDescription = "Visualizador interactivo con giroscopio",
                     modifier = Modifier
                         .graphicsLayer(
                             scaleX = scale,
@@ -377,6 +392,115 @@ fun ImageViewerWithZoom(
                     color = Color.White,
                     style = MaterialTheme.typography.bodyMedium
                 )
+            }
+
+            // HUD Flotante: Indicador visual en tiempo real de exploración panorámica por inclinación (Tilt-to-Pan)
+            Card(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xEE1E293B)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    // Fila 1: Título, Estado del Sensor y Botón de Alternar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "🎯 Giroscopio Tilt-to-Pan",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF38BDF8)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(4.dp))
+                                    .background(if (isTiltPanActive) Color(0xFF10B981).copy(alpha = 0.2f) else Color(0xFFEF4444).copy(alpha = 0.2f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (isTiltPanActive) "ACTIVO" else "PAUSADO",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isTiltPanActive) Color(0xFF10B981) else Color(0xFFEF4444)
+                                )
+                            }
+                        }
+
+                        FilledTonalButton(
+                            onClick = { isTiltPanActive = !isTiltPanActive },
+                            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.height(30.dp)
+                        ) {
+                            Text(
+                                text = if (isTiltPanActive) "Pausar" else "Activar",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Fila 2: Burbuja física 2D de nivel + Telemetría angular Pitch & Roll
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Bubble Level Indicator (Burbuja física 2D de inclinación)
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF334155))
+                                .border(1.5.dp, Color(0xFF38BDF8), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Cruzeta central
+                            Box(modifier = Modifier.size(6.dp).background(Color(0x66FFFFFF), CircleShape))
+                            // Burbuja de nivel dinámica según pitch y roll
+                            val bubbleOffsetX = (-tiltRoll * 0.7f).coerceIn(-14f, 14f)
+                            val bubbleOffsetY = (tiltPitch * 0.7f).coerceIn(-14f, 14f)
+                            Box(
+                                modifier = Modifier
+                                    .size(12.dp)
+                                    .graphicsLayer(translationX = bubbleOffsetX, translationY = bubbleOffsetY)
+                                    .clip(CircleShape)
+                                    .background(if (isTiltPanActive) Color(0xFF10B981) else Color(0xFF94A3B8))
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Telemetría angular en dos líneas claras sin compresión
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Inclinación: Pitch: ${String.format(Locale.US, "%+4.1f", tiltPitch)}° • Roll: ${String.format(Locale.US, "%+4.1f", tiltRoll)}°",
+                                fontSize = 11.sp,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFE2E8F0)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Desplazamiento: (${String.format(Locale.US, "%+3.0f", if (isTiltPanActive) tiltPanOffset.x else 0f)}px, ${String.format(Locale.US, "%+3.0f", if (isTiltPanActive) tiltPanOffset.y else 0f)}px)",
+                                fontSize = 10.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = Color(0xFF94A3B8)
+                            )
+                        }
+                    }
+                }
             }
         }
     }

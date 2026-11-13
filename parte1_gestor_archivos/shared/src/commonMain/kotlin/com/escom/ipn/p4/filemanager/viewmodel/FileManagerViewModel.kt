@@ -529,8 +529,9 @@ class FileManagerViewModel(
     fun sendFileViaBluetooth(fileItem: FileItem, device: BluetoothPeerDevice) {
         val bt = bluetoothService ?: return
         coroutineScope.launch {
-            val textContent = repository.readFileText(fileItem.path).getOrNull() ?: ""
-            val bytes = textContent.encodeToByteArray()
+            val bytes = repository.readFileBytes(fileItem.path).getOrNull()
+                ?: repository.readFileText(fileItem.path).getOrNull()?.encodeToByteArray()
+                ?: ByteArray(0)
             val result = bt.sendFile(device, fileItem.name, fileItem.mimeType, bytes)
             result.fold(
                 onSuccess = { record ->
@@ -549,12 +550,28 @@ class FileManagerViewModel(
 
     fun simulateBluetoothTransfer(fileItem: FileItem) {
         coroutineScope.launch {
-            val textContent = repository.readFileText(fileItem.path).getOrNull() ?: "Demo KMP File"
-            bluetoothService?.simulateTransfer(fileItem.name, fileItem.mimeType, textContent.encodeToByteArray(), asSender = true)
+            val bytes = repository.readFileBytes(fileItem.path).getOrNull()
+                ?: repository.readFileText(fileItem.path).getOrNull()?.encodeToByteArray()
+                ?: "Demo KMP File".encodeToByteArray()
+            bluetoothService?.simulateTransfer(fileItem.name, fileItem.mimeType, bytes, asSender = true)
             _uiState.update {
                 it.copy(statusMessage = "Simulando envío por bloques de '${fileItem.name}'...")
             }
         }
+    }
+
+    fun simulateIncomingTransferOffer() {
+        val demoOffer = FileTransferMetadataPacket(
+            transferId = "demo_inc_" + (0..9999).random(),
+            fileName = "alumnos_escom.json",
+            fileExtension = "json",
+            mimeType = "application/json",
+            totalBytes = 2048L,
+            sha256 = "b7a8291a134d193d94828131d2e16447c29373e27150a8b9e69dbfbf6e85d1e4",
+            senderName = "Galaxy A54 (Nodo Par)"
+        )
+        bluetoothService?.injectIncomingOffer(demoOffer)
+        _uiState.update { it.copy(statusMessage = "Simulando oferta entrante con SHA-256...") }
     }
 
     fun acceptIncomingTransfer() {
