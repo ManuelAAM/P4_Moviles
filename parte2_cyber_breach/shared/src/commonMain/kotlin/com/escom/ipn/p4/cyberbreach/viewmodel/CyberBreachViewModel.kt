@@ -49,7 +49,8 @@ data class CyberBreachUiState(
     val isBluetoothLobbyOpen: Boolean = false,
     val isHosting: Boolean = false,
     val bluetoothPairedDevices: List<Pair<String, String>> = emptyList(),
-    val bluetoothStatusText: String = "Desconectado"
+    val bluetoothStatusText: String = "Desconectado",
+    val isGyroAimingEnabled: Boolean = false
 )
 
 class CyberBreachViewModel(
@@ -76,8 +77,10 @@ class CyberBreachViewModel(
     private fun setupSensorListeners() {
         sensorManager?.startListening(object : IGameSensorListener {
             override fun onTiltAiming(targetCell: Int, pitch: Float, roll: Float) {
-                val current = _uiState.value.gameState
-                if (_uiState.value.currentScreen == CyberScreen.GAMEPLAY && !current.isGameOver) {
+                val state = _uiState.value
+                val current = state.gameState
+                // La mira por giroscopio sólo actualiza la cuadrícula si el jugador la activó expresamente
+                if (state.isGyroAimingEnabled && state.currentScreen == CyberScreen.GAMEPLAY && !current.isGameOver) {
                     val nextState = GameEngine.updateSensorTarget(current, targetCell)
                     _uiState.update { it.copy(gameState = nextState) }
                 }
@@ -255,6 +258,10 @@ class CyberBreachViewModel(
     }
 
     fun startNewGame(mode: GameMode = GameMode.INFILTRATION) {
+        if (mode == GameMode.BLUETOOTH_P2P && bluetoothService?.isConnected?.value != true) {
+            openBluetoothLobby()
+            return
+        }
         val fresh = GameEngine.startNewGame(mode)
         _uiState.update {
             it.copy(
@@ -358,6 +365,22 @@ class CyberBreachViewModel(
 
         coroutineScope.launch {
             saveRepository.saveActiveSession(nextState)
+        }
+    }
+
+    fun toggleGyroAiming(enabled: Boolean? = null) {
+        _uiState.update { current ->
+            val next = enabled ?: !current.isGyroAimingEnabled
+            val updatedGameState = if (!next) {
+                current.gameState.copy(targetedCellBySensor = null)
+            } else {
+                current.gameState
+            }
+            current.copy(
+                isGyroAimingEnabled = next,
+                gameState = updatedGameState,
+                statusMessage = if (next) "Mira por Giroscopio ACTIVADA (Inclina para apuntar)" else "Control Táctil ACTIVO (Giroscopio desactivado)"
+            )
         }
     }
 

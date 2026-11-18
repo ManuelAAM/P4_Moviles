@@ -57,7 +57,9 @@ fun BluetoothLobbyDialog(
     onDismiss: () -> Unit,
     onHostGame: () -> Unit,
     onConnectDevice: (address: String, name: String) -> Unit,
-    onRefreshDevices: () -> Unit
+    onRefreshDevices: () -> Unit,
+    onRequestPermissions: () -> Unit = {},
+    onOpenBluetoothSettings: () -> Unit = {}
 ) {
     var selectedRoleTab by remember { mutableIntStateOf(if (isHosting) 0 else 1) }
 
@@ -159,10 +161,46 @@ fun BluetoothLobbyDialog(
                                 fontWeight = FontWeight.SemiBold
                             )
                         }
+
+                        if (statusText.contains("Permiso", ignoreCase = true) || statusText.contains("BLUETOOTH_CONNECT", ignoreCase = true)) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = onRequestPermissions,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(6.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                            ) {
+                                Text("Conceder Permisos Bluetooth", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onRequestPermissions,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        Text("Permisos BT", fontSize = 10.sp)
+                    }
+                    OutlinedButton(
+                        onClick = onOpenBluetoothSettings,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(6.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 6.dp)
+                    ) {
+                        Text("Ajustes Bluetooth", fontSize = 10.sp)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 if (selectedRoleTab == 0) {
                     // MODO HOSPEDADOR
@@ -243,7 +281,10 @@ fun BluetoothLobbyDialog(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        modifier = Modifier.weight(1f),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
                                         Icon(
                                             Icons.Default.PhoneAndroid,
                                             contentDescription = null,
@@ -252,15 +293,27 @@ fun BluetoothLobbyDialog(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
-                                            Text(name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                            Text(address, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
+                                            Text(
+                                                text = name,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                maxLines = 1
+                                            )
+                                            Text(
+                                                text = address,
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                            )
                                         }
                                     }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
 
                                     Button(
                                         onClick = { onConnectDevice(address, name) },
                                         shape = RoundedCornerShape(6.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                     ) {
                                         Text("UNIRSE", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                     }

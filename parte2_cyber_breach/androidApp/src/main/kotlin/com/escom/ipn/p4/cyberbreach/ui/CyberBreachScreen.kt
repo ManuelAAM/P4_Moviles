@@ -80,7 +80,9 @@ import com.escom.ipn.p4.cyberbreach.viewmodel.CyberScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CyberBreachScreen(
-    viewModel: CyberBreachViewModel
+    viewModel: CyberBreachViewModel,
+    onRequestBluetoothPermissions: () -> Unit = {},
+    onOpenBluetoothSettings: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -280,11 +282,12 @@ fun CyberBreachScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp, vertical = 4.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
                     ) {
-                        Column(modifier = Modifier.padding(8.dp)) {
-                            // Mira del Giroscopio
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            // Cabecera: Título y Toggle de Giroscopio Opcional
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -294,79 +297,145 @@ fun CyberBreachScreen(
                                     Icon(
                                         Icons.Default.Adjust,
                                         contentDescription = null,
-                                        tint = Color(0xFF00E5FF),
+                                        tint = if (state.isGyroAimingEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    val targetCell = state.gameState.targetedCellBySensor
-                                    val coordText = if (targetCell != null) {
-                                        val r = targetCell / 8 + 1
-                                        val c = ('A'.code + (targetCell % 8)).toChar()
-                                        "$c$r (Fila $r, Col $c)"
-                                    } else "Inclinando..."
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Giroscopio: $coordText",
-                                        fontSize = 10.sp,
+                                        text = "SENSORES TÁCTICOS",
                                         fontFamily = FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF00E5FF)
+                                        fontSize = 11.sp,
+                                        color = if (state.isGyroAimingEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary
                                     )
                                 }
 
                                 Button(
-                                    onClick = { viewModel.fireAtSensorTarget() },
-                                    enabled = state.gameState.targetedCellBySensor != null &&
-                                            (!state.gameState.isBluetoothSession || state.gameState.isMyTurn) &&
-                                            !state.gameState.isGameOver,
+                                    onClick = { viewModel.toggleGyroAiming() },
                                     shape = RoundedCornerShape(6.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF00E5FF),
-                                        contentColor = Color(0xFF0F172A)
+                                        containerColor = if (state.isGyroAimingEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.surface,
+                                        contentColor = if (state.isGyroAimingEnabled) Color(0xFF0F172A) else MaterialTheme.colorScheme.onSurface
                                     ),
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                    border = if (!state.isGyroAimingEnabled) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null,
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                                 ) {
-                                    Icon(Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Disparar Mira", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    Text(
+                                        text = if (state.isGyroAimingEnabled) "Giroscopio: ACTIVO" else "Activar Giroscopio",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            // Recarga Cinética por Agitación
+                            // Sección Giroscopio: Dependiendo si está activo u opcionalmente desactivado
+                            if (state.isGyroAimingEnabled) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        val targetCell = state.gameState.targetedCellBySensor
+                                        val coordText = if (targetCell != null) {
+                                            val r = targetCell / 8 + 1
+                                            val c = ('A'.code + (targetCell % 8)).toChar()
+                                            "$c$r (Fila $r, Col $c)"
+                                        } else "Inclinando dispositivo..."
+                                        Text(
+                                            text = "Mira: $coordText",
+                                            fontSize = 11.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF00E5FF)
+                                        )
+                                        Text(
+                                            text = "Inclina suavemente para mover la retícula",
+                                            fontSize = 9.sp,
+                                            color = Color(0xFF94A3B8)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Button(
+                                        onClick = { viewModel.fireAtSensorTarget() },
+                                        enabled = state.gameState.targetedCellBySensor != null &&
+                                                (!state.gameState.isBluetoothSession || state.gameState.isMyTurn) &&
+                                                !state.gameState.isGameOver,
+                                        shape = RoundedCornerShape(6.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF00E5FF),
+                                            contentColor = Color(0xFF0F172A)
+                                        ),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Disparar Mira", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            } else {
+                                Text(
+                                    text = "Modo táctil activo: Toca directamente cualquier celda para atacar. Activa el giroscopio para apuntar por inclinación.",
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 14.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.surfaceVariant))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Sección Recarga Cinética por Agitación
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Icon(
                                         Icons.Default.Vibration,
                                         contentDescription = null,
                                         tint = if (state.gameState.kineticCooldownSeconds == 0) Color(0xFF34D399) else Color(0xFFFBBF24),
-                                        modifier = Modifier.size(16.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    val shakeStatus = if (state.gameState.kineticCooldownSeconds == 0) {
-                                        "Recarga Cinética: LISTA (+5 EN)"
-                                    } else {
-                                        "Enfriamiento cinético: ${state.gameState.kineticCooldownSeconds}s"
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Column {
+                                        Text(
+                                            text = "Recarga Cinética (+5 EN)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (state.gameState.kineticCooldownSeconds == 0) Color(0xFF34D399) else Color(0xFFFBBF24)
+                                        )
+                                        val shakeHint = if (state.gameState.kineticCooldownSeconds == 0) {
+                                            "Agita el teléfono con firmeza"
+                                        } else {
+                                            "Enfriamiento: ${state.gameState.kineticCooldownSeconds}s"
+                                        }
+                                        Text(
+                                            text = shakeHint,
+                                            fontSize = 9.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     }
-                                    Text(
-                                        text = shakeStatus,
-                                        fontSize = 10.sp,
-                                        fontFamily = FontFamily.Monospace,
-                                        color = if (state.gameState.kineticCooldownSeconds == 0) Color(0xFF34D399) else Color(0xFFFBBF24)
-                                    )
                                 }
+
+                                Spacer(modifier = Modifier.width(8.dp))
 
                                 OutlinedButton(
                                     onClick = { viewModel.triggerManualKineticShake() },
                                     enabled = state.gameState.kineticCooldownSeconds == 0 && !state.gameState.isGameOver,
                                     shape = RoundedCornerShape(6.dp),
-                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
-                                    Text("Agitar (Test)", fontSize = 9.sp)
+                                    Text("Test Agitar", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -490,7 +559,12 @@ fun CyberBreachScreen(
             onDismiss = { viewModel.closeBluetoothLobby() },
             onHostGame = { viewModel.hostBluetoothGame() },
             onConnectDevice = { address, name -> viewModel.connectToBluetoothHost(address, name) },
-            onRefreshDevices = { viewModel.bluetoothService?.refreshPairedDevices() }
+            onRefreshDevices = {
+                onRequestBluetoothPermissions()
+                viewModel.bluetoothService?.refreshPairedDevices()
+            },
+            onRequestPermissions = onRequestBluetoothPermissions,
+            onOpenBluetoothSettings = onOpenBluetoothSettings
         )
     }
 
