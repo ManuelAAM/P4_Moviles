@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.CrisisAlert
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.PlayArrow
@@ -65,7 +66,8 @@ fun TitleMenuScreen(
     onStartGame: (GameMode) -> Unit,
     onResumeGame: () -> Unit,
     onOpenSavesManager: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenBluetoothLobby: () -> Unit = {}
 ) {
     var showModeSelector by remember { mutableStateOf(false) }
 
@@ -197,6 +199,30 @@ fun TitleMenuScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Botón 2.5: Ciberduelo Bluetooth 1v1 (Práctica 6)
+            Button(
+                onClick = onOpenBluetoothLobby,
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .height(52.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                )
+            ) {
+                Icon(Icons.Default.Bluetooth, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "CIBERDUELO BLUETOOTH (1v1)",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Botón 3: Cargar Partida (Habilitado sólo si hay partidas)
             val hasSaves = savedGames.isNotEmpty()
             Button(
@@ -297,17 +323,28 @@ fun ModeSelectionDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(
-                text = "SELECCIONA MODO DE JUEGO",
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 16.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CrisisAlert,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "SELECCIONA MODO DE JUEGO",
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 15.sp
+                )
+            }
         },
         text = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Modo 1: Infiltración en Solitario
                 ModeCard(
@@ -326,12 +363,21 @@ fun ModeSelectionDialog(
                     description = "¡Combate 1v1 por turnos! Tras cada ataque tuyo a la red enemiga, la CPU contraataca tu infraestructura. Neutraliza sus nodos antes de que destruyan los tuyos.",
                     onClick = { onSelectMode(GameMode.CPU_DUEL) }
                 )
+
+                // Modo 3: Ciberduelo Bluetooth 1v1 (Práctica 6)
+                ModeCard(
+                    icon = Icons.Default.Bluetooth,
+                    title = "Ciberduelo Bluetooth 1v1",
+                    badge = "P2P LOCAL",
+                    description = "Batalla táctica 1v1 sincronizada por Bluetooth RFCOMM con apuntado por giroscopio opcional, recarga cinética por agitación y validación estricta de turnos.",
+                    onClick = { onSelectMode(GameMode.BLUETOOTH_P2P) }
+                )
             }
         },
         confirmButton = {},
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancelar")
+                Text("Cerrar")
             }
         }
     )
@@ -348,6 +394,7 @@ fun ModeCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
@@ -355,24 +402,27 @@ fun ModeCard(
         ),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primaryContainer)
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.secondary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = title,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 13.sp
                     )
                 }
 
@@ -391,13 +441,13 @@ fun ModeCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             Text(
                 text = description,
                 fontSize = 11.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = 16.sp
+                lineHeight = 15.sp
             )
         }
     }

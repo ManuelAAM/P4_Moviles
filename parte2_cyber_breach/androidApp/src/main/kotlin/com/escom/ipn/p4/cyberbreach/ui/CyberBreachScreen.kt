@@ -1,6 +1,7 @@
 package com.escom.ipn.p4.cyberbreach.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,7 +16,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Adjust
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.GpsFixed
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Refresh
@@ -23,12 +28,16 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -54,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.escom.ipn.p4.cyberbreach.model.CyberTheme
 import com.escom.ipn.p4.cyberbreach.model.GameMode
+import com.escom.ipn.p4.cyberbreach.ui.components.BluetoothLobbyDialog
 import com.escom.ipn.p4.cyberbreach.ui.components.CyberGrid
 import com.escom.ipn.p4.cyberbreach.ui.components.CyberStatusBar
 import com.escom.ipn.p4.cyberbreach.ui.components.GameOverDialog
@@ -70,7 +80,9 @@ import com.escom.ipn.p4.cyberbreach.viewmodel.CyberScreen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CyberBreachScreen(
-    viewModel: CyberBreachViewModel
+    viewModel: CyberBreachViewModel,
+    onRequestBluetoothPermissions: () -> Unit = {},
+    onOpenBluetoothSettings: () -> Unit = {}
 ) {
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -104,7 +116,8 @@ fun CyberBreachScreen(
                     viewModel.loadSavedGamesList()
                     showSavesManager = true
                 },
-                onOpenSettings = { showSettings = true }
+                onOpenSettings = { showSettings = true },
+                onOpenBluetoothLobby = { viewModel.openBluetoothLobby() }
             )
 
             SnackbarHost(
@@ -171,8 +184,48 @@ fun CyberBreachScreen(
                 // Barra de estado táctico
                 CyberStatusBar(gameState = state.gameState)
 
-                // En modo CPU_DUEL, mostrar selector de vista (Ataque vs Defensa)
-                if (state.gameState.gameMode == GameMode.CPU_DUEL) {
+                // Banner Multijugador Bluetooth (Práctica 6)
+                if (state.gameState.gameMode == GameMode.BLUETOOTH_P2P) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (state.gameState.isMyTurn) Color(0xFF064E3B) else Color(0xFF78350F)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (state.gameState.isMyTurn) Icons.Default.Bolt else Icons.Default.Bluetooth,
+                                contentDescription = null,
+                                tint = if (state.gameState.isMyTurn) Color(0xFF34D399) else Color(0xFFFBBF24),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = if (state.gameState.isMyTurn) "🟢 ¡TU TURNO DE ATACAR!" else "⏳ TURNO DEL CONTRINCANTE",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
+                                    fontFamily = FontFamily.Monospace,
+                                    color = if (state.gameState.isMyTurn) Color(0xFF34D399) else Color(0xFFFBBF24)
+                                )
+                                Text(
+                                    text = state.gameState.bluetoothStatusMessage ?: "Oponente: ${state.gameState.opponentName}",
+                                    fontSize = 10.sp,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // En modo CPU_DUEL o BLUETOOTH_P2P, mostrar selector de vista (Ataque vs Defensa)
+                if (state.gameState.gameMode == GameMode.CPU_DUEL || state.gameState.gameMode == GameMode.BLUETOOTH_P2P) {
                     TabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = MaterialTheme.colorScheme.surface,
@@ -196,7 +249,7 @@ fun CyberBreachScreen(
                     }
                 }
 
-                if (state.gameState.gameMode != GameMode.CPU_DUEL || selectedTab == 0) {
+                if ((state.gameState.gameMode != GameMode.CPU_DUEL && state.gameState.gameMode != GameMode.BLUETOOTH_P2P) || selectedTab == 0) {
                     // Panel de selección de habilidades especiales
                     SkillsPanel(
                         currentEnergy = state.gameState.playerEnergy,
@@ -217,11 +270,178 @@ fun CyberBreachScreen(
                         CyberGrid(
                             grid = state.gameState.grid,
                             gridSize = state.gameState.gridSize,
+                            targetedCell = state.gameState.targetedCellBySensor,
                             onCellClick = { cellIndex -> viewModel.onCellClicked(cellIndex) }
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Tarjeta de Sensores Tácticos: Giroscopio y Recarga Cinética
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f))
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            // Cabecera: Título y Toggle de Giroscopio Opcional
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        Icons.Default.Adjust,
+                                        contentDescription = null,
+                                        tint = if (state.isGyroAimingEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "SENSORES TÁCTICOS",
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.sp,
+                                        color = if (state.isGyroAimingEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+
+                                Button(
+                                    onClick = { viewModel.toggleGyroAiming() },
+                                    shape = RoundedCornerShape(6.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (state.isGyroAimingEnabled) Color(0xFF00E5FF) else MaterialTheme.colorScheme.surface,
+                                        contentColor = if (state.isGyroAimingEnabled) Color(0xFF0F172A) else MaterialTheme.colorScheme.onSurface
+                                    ),
+                                    border = if (!state.isGyroAimingEnabled) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.secondary) else null,
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = if (state.isGyroAimingEnabled) "Giroscopio: ACTIVO" else "Activar Giroscopio",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Sección Giroscopio: Dependiendo si está activo u opcionalmente desactivado
+                            if (state.isGyroAimingEnabled) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        val targetCell = state.gameState.targetedCellBySensor
+                                        val coordText = if (targetCell != null) {
+                                            val r = targetCell / 8 + 1
+                                            val c = ('A'.code + (targetCell % 8)).toChar()
+                                            "$c$r (Fila $r, Col $c)"
+                                        } else "Inclinando dispositivo..."
+                                        Text(
+                                            text = "Mira: $coordText",
+                                            fontSize = 11.sp,
+                                            fontFamily = FontFamily.Monospace,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF00E5FF)
+                                        )
+                                        Text(
+                                            text = "Inclina suavemente para mover la retícula",
+                                            fontSize = 9.sp,
+                                            color = Color(0xFF94A3B8)
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Button(
+                                        onClick = { viewModel.fireAtSensorTarget() },
+                                        enabled = state.gameState.targetedCellBySensor != null &&
+                                                (!state.gameState.isBluetoothSession || state.gameState.isMyTurn) &&
+                                                !state.gameState.isGameOver,
+                                        shape = RoundedCornerShape(6.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF00E5FF),
+                                            contentColor = Color(0xFF0F172A)
+                                        ),
+                                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(Icons.Default.GpsFixed, contentDescription = null, modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Disparar Mira", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            } else {
+                                Text(
+                                    text = "Modo táctil activo: Toca directamente cualquier celda para atacar. Activa el giroscopio para apuntar por inclinación.",
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    lineHeight = 14.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.surfaceVariant))
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Sección Recarga Cinética por Agitación
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.Vibration,
+                                        contentDescription = null,
+                                        tint = if (state.gameState.kineticCooldownSeconds == 0) Color(0xFF34D399) else Color(0xFFFBBF24),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Column {
+                                        Text(
+                                            text = "Recarga Cinética (+5 EN)",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (state.gameState.kineticCooldownSeconds == 0) Color(0xFF34D399) else Color(0xFFFBBF24)
+                                        )
+                                        val shakeHint = if (state.gameState.kineticCooldownSeconds == 0) {
+                                            "Agita el teléfono con firmeza"
+                                        } else {
+                                            "Enfriamiento: ${state.gameState.kineticCooldownSeconds}s"
+                                        }
+                                        Text(
+                                            text = shakeHint,
+                                            fontSize = 9.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                OutlinedButton(
+                                    onClick = { viewModel.triggerManualKineticShake() },
+                                    enabled = state.gameState.kineticCooldownSeconds == 0 && !state.gameState.isGameOver,
+                                    shape = RoundedCornerShape(6.dp),
+                                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Text("Test Agitar", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
+                    }
                 } else {
-                    // Vista de defensa en Cyber Duelo: Cuadrícula con los nodos propios y ataques de la CPU
+                    // Vista de defensa en Cyber Duelo / Multijugador: Cuadrícula con los nodos propios
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -327,6 +547,24 @@ fun CyberBreachScreen(
             rawContent = content,
             format = state.rawViewingFormat ?: state.preferredFormat,
             onDismiss = { viewModel.closeRawViewer() }
+        )
+    }
+
+    // Lobby Multijugador Bluetooth
+    if (state.isBluetoothLobbyOpen) {
+        BluetoothLobbyDialog(
+            isHosting = state.isHosting,
+            statusText = state.bluetoothStatusText,
+            pairedDevices = state.bluetoothPairedDevices,
+            onDismiss = { viewModel.closeBluetoothLobby() },
+            onHostGame = { viewModel.hostBluetoothGame() },
+            onConnectDevice = { address, name -> viewModel.connectToBluetoothHost(address, name) },
+            onRefreshDevices = {
+                onRequestBluetoothPermissions()
+                viewModel.bluetoothService?.refreshPairedDevices()
+            },
+            onRequestPermissions = onRequestBluetoothPermissions,
+            onOpenBluetoothSettings = onOpenBluetoothSettings
         )
     }
 

@@ -17,9 +17,23 @@ object GameEngine {
     const val GRID_SIZE = 8
     const val TOTAL_CELLS = 64
 
-    fun startNewGame(mode: GameMode = GameMode.INFILTRATION): GameState {
-        val enemyNodes = generateRandomNodes()
-        val playerNodes = if (mode == GameMode.CPU_DUEL) generateRandomNodes() else emptyList()
+    fun startNewGame(
+        mode: GameMode = GameMode.INFILTRATION,
+        isHost: Boolean = true,
+        opponentName: String = "Contrincante"
+    ): GameState {
+        val enemyNodes = if (mode == GameMode.BLUETOOTH_P2P) {
+            listOf(
+                NetworkNode("opp_mf", NodeType.MAINFRAME, emptyList(), 0, false),
+                NetworkNode("opp_ws", NodeType.WEB_SERVER, emptyList(), 0, false),
+                NetworkNode("opp_db", NodeType.DATABASE, emptyList(), 0, false),
+                NetworkNode("opp_fw", NodeType.FIREWALL, emptyList(), 0, false)
+            )
+        } else generateRandomNodes()
+
+        val playerNodes = if (mode == GameMode.CPU_DUEL || mode == GameMode.BLUETOOTH_P2P) {
+            generateRandomNodes()
+        } else emptyList()
 
         return GameState(
             gridSize = GRID_SIZE,
@@ -37,7 +51,17 @@ object GameEngine {
             isVictory = false,
             isDefeat = false,
             history = emptyList(),
-            activeSkill = SkillType.NORMAL
+            activeSkill = SkillType.NORMAL,
+            isMyTurn = if (mode == GameMode.BLUETOOTH_P2P) isHost else true,
+            isBluetoothSession = (mode == GameMode.BLUETOOTH_P2P),
+            isHost = isHost,
+            opponentName = opponentName,
+            targetedCellBySensor = null,
+            sensorTiltActive = false,
+            kineticCooldownSeconds = 0,
+            bluetoothStatusMessage = if (mode == GameMode.BLUETOOTH_P2P) {
+                if (isHost) "¡Tu turno de atacar!" else "Esperando jugada de $opponentName..."
+            } else null
         )
     }
 
@@ -380,5 +404,183 @@ object GameEngine {
         )
 
         return Pair(nextState, "¡Ataque DDoS ejecutado sobre 3 casillas! Impactos: $hitCount")
+    }
+
+    // --- MÉTODOS PRÁCTICA 6: BLUETOOTH MULTIPLAYER Y SENSORES ---
+
+    fun handleIncomingRemoteAttack(
+        currentState: GameState,
+        incomingSeq: Int,
+        targetCell: Int,
+        skill: SkillType,
+        senderName: String,
+        timestamp: String
+    ): Pair<GameState, com.escom.ipn.p4.cyberbreach.model.CyberBreachPacket> {
+        val playerGrid = currentState.playerGrid.toMutableList()
+        val hitNode = currentState.playerNodes.find { it.cells.contains(targetCell) }
+
+        val colLetter = ('A'.code + (targetCell % GRID_SIZE)).toChar()
+        val rowNum = (targetCell / GRID_SIZE) + 1
+        val coordName = "$colLetter$rowNum"
+
+        val hitResult: String
+        var destroyedNodeName: String? = null
+        var isCompromised = false
+
+        val updatedPlayerNodes = if (hitNode != null) {
+            val newHits = hitNode.hits + 1
+            isCompromised = newHits >= hitNode.totalSize
+            if (isCompromised) {
+                destroyedNodeName = hitNode.type.displayName
+                hitResult = "DESTROYED"
+                hitNode.cells.forEach { c -> playerGrid[c] = CELL_DESTROYED }
+            } else {
+                hitResult = "HIT"
+                playerGrid[targetCell] = CELL_HIT
+            }
+            currentState.playerNodes.map { n ->
+                if (n.id == hitNode.id) n.copy(hits = newHits, isCompromised = isCompromised) else n
+            }
+        } else {
+            hitResult = "MISS"
+            playerGrid[targetCell] = CELL_MISS
+            currentState.playerNodes
+        }
+
+        val allPlayerNodesCompromised = updatedPlayerNodes.all { it.isCompromised }
+
+        val historyMsg = when (hitResult) {
+            "DESTROYED" -> "$senderName destruyó tu [$destroyedNodeName] en $coordName"
+            "HIT" -> "$senderName impactó tu red en $coordName"
+            else -> "$senderName atacó $coordName sin éxito"
+        }
+
+        val action = GameAction(
+            turn = currentState.turns + 1,
+            actionType = "REMOTE_ATTACK",
+            targetIndices = listOf(targetCell),
+            result = historyMsg,
+            timestamp = timestamp
+        )
+
+        val nextState = currentState.copy(
+            playerGrid = playerGrid,
+            playerNodes = updatedPlayerNodes,
+            turns = currentState.turns + 1,
+            isDefeat = allPlayerNodesCompromised,
+            isMyTurn = !allPlayerNodesCompromised,
+            bluetoothStatusMessage = if (allPlayerNodesCompromised) "¡Derrota! Tu infraestructura fue vulnerada" else "¡Tu turno de atacar!",
+            history = currentState.history + action
+        )
+
+        val responsePacket = com.escom.ipn.p4.cyberbreach.model.CyberBreachPacket(
+            type = com.escom.ipn.p4.cyberbreach.model.GamePacketType.ATTACK_RESULT,
+            seq = incomingSeq,
+            senderName = "Yo",
+            targetCell = targetCell,
+            skill = skill,
+            hitResult = hitResult,
+            destroyedNodeName = destroyedNodeName,
+            isGameOver = allPlayerNodesCompromised,
+            didAttackerWin = allPlayerNodesCompromised,
+            timestamp = System.currentTimeMillis()
+        )
+
+        return Pair(nextState, responsePacket)
+    }
+
+    fun applyRemoteAttackResult(
+        currentState: GameState,
+        resultPacket: com.escom.ipn.p4.cyberbreach.model.CyberBreachPacket,
+        timestamp: String
+    ): Pair<GameState, String> {
+        val targetCell = resultPacket.targetCell
+        val currentGrid = currentState.grid.toMutableList()
+
+        val colLetter = ('A'.code + (targetCell % GRID_SIZE)).toChar()
+        val rowNum = (targetCell / GRID_SIZE) + 1
+        val coordName = "$colLetter$rowNum"
+
+        val addedScore: Int
+        val feedback: String
+
+        when (resultPacket.hitResult) {
+            "DESTROYED" -> {
+                currentGrid[targetCell] = CELL_DESTROYED
+                addedScore = 500
+                feedback = "¡Impacto crítico! Destruiste el [${resultPacket.destroyedNodeName}] de ${currentState.opponentName} en $coordName"
+            }
+            "HIT" -> {
+                currentGrid[targetCell] = CELL_HIT
+                addedScore = 100
+                feedback = "¡Impacto confirmado en $coordName! +100 PTS"
+            }
+            else -> {
+                currentGrid[targetCell] = CELL_MISS
+                addedScore = 0
+                feedback = "Disparo en $coordName fallido."
+            }
+        }
+
+        val updatedNodes = if (resultPacket.hitResult == "DESTROYED") {
+            var marked = false
+            currentState.nodes.map { node ->
+                if (!marked && !node.isCompromised) {
+                    marked = true
+                    node.copy(isCompromised = true, hits = node.totalSize)
+                } else node
+            }
+        } else currentState.nodes
+
+        val isVictory = resultPacket.isGameOver && resultPacket.didAttackerWin
+
+        val action = GameAction(
+            turn = currentState.turns + 1,
+            actionType = "STRIKE_RESULT",
+            targetIndices = listOf(targetCell),
+            result = feedback,
+            timestamp = timestamp
+        )
+
+        val nextState = currentState.copy(
+            grid = currentGrid,
+            nodes = updatedNodes,
+            score = currentState.score + addedScore,
+            playerEnergy = (currentState.playerEnergy + (if (resultPacket.hitResult != "MISS") 10 else 0)).coerceAtMost(100),
+            turns = currentState.turns + 1,
+            isVictory = isVictory,
+            isMyTurn = false,
+            bluetoothStatusMessage = if (isVictory) "¡Victoria Ciberbélica!" else "Esperando jugada de ${currentState.opponentName}...",
+            history = currentState.history + action
+        )
+
+        return Pair(nextState, feedback)
+    }
+
+    fun applyKineticShake(currentState: GameState): Pair<GameState, String> {
+        if (currentState.kineticCooldownSeconds > 0) {
+            return Pair(currentState, "Recarga cinética en enfriamiento: ${currentState.kineticCooldownSeconds}s")
+        }
+        val newEnergy = (currentState.playerEnergy + 5).coerceAtMost(100)
+        val nextState = currentState.copy(
+            playerEnergy = newEnergy,
+            kineticCooldownSeconds = 15
+        )
+        return Pair(nextState, "¡Recarga Cinética por Agitación! +5 EN (Total: $newEnergy)")
+    }
+
+    fun updateSensorTarget(currentState: GameState, targetCell: Int): GameState {
+        return currentState.copy(
+            targetedCellBySensor = targetCell,
+            sensorTiltActive = true
+        )
+    }
+
+    fun decrementKineticCooldown(currentState: GameState): GameState {
+        return if (currentState.kineticCooldownSeconds > 0) {
+            currentState.copy(kineticCooldownSeconds = currentState.kineticCooldownSeconds - 1)
+        } else {
+            currentState
+        }
     }
 }

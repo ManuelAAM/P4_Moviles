@@ -1,5 +1,11 @@
 package com.escom.ipn.p4.filemanager.ui
 
+import android.content.Context
+import android.content.Intent
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,15 +23,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.ui.geometry.Offset
+import com.escom.ipn.p4.filemanager.ui.components.BiometricVaultDialog
+import com.escom.ipn.p4.filemanager.ui.components.BluetoothTransferDialog
+import com.escom.ipn.p4.filemanager.ui.components.SensorTelemetryDialog
+import com.escom.ipn.p4.filemanager.ui.components.WebProxyDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -72,6 +87,7 @@ import com.escom.ipn.p4.filemanager.viewmodel.FileManagerViewModel
 fun FileManagerScreen(
     viewModel: FileManagerViewModel
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -85,6 +101,7 @@ fun FileManagerScreen(
     var itemForDelete by remember { mutableStateOf<FileItem?>(null) }
     var showCreateFolderDialog by remember { mutableStateOf(false) }
     var showCreateFileDialog by remember { mutableStateOf(false) }
+    var showBiometricVaultDialog by remember { mutableStateOf(false) }
 
     // Notificaciones Snackbar
     LaunchedEffect(state.statusMessage, state.errorMessage) {
@@ -146,6 +163,26 @@ fun FileManagerScreen(
                         IconButton(onClick = { isSearchActive = true }) {
                             Icon(Icons.Default.Search, contentDescription = "Buscar")
                         }
+                    }
+
+                    // Ejercicio 1: Telemetría de Sensores
+                    IconButton(onClick = { viewModel.openSensorTelemetryDialog() }) {
+                        Icon(Icons.Default.Sensors, contentDescription = "Sensores e Interacción")
+                    }
+
+                    // Ejercicio 2: Transferencia Bluetooth
+                    IconButton(onClick = { viewModel.openBluetoothTransferDialog() }) {
+                        Icon(Icons.Default.Bluetooth, contentDescription = "Transferencia Bluetooth")
+                    }
+
+                    // Ejercicio 3: Consulta Web Proxy por Bluetooth
+                    IconButton(onClick = { viewModel.openWebProxyDialog() }) {
+                        Icon(Icons.Default.Language, contentDescription = "Consulta Web Proxy")
+                    }
+
+                    // Bóveda Biométrica
+                    IconButton(onClick = { showBiometricVaultDialog = true }) {
+                        Icon(Icons.Default.Fingerprint, contentDescription = "Bóveda Protegida")
                     }
 
                     // Selector de tema institucional
@@ -339,7 +376,8 @@ fun FileManagerScreen(
                                 onMove = {
                                     viewModel.moveItem(item, state.currentPath)
                                 },
-                                onDetails = { itemForDetails = item }
+                                onDetails = { itemForDetails = item },
+                                onBluetoothSend = { viewModel.openBluetoothTransferDialog(item) }
                             )
                         }
                     }
@@ -400,7 +438,99 @@ fun FileManagerScreen(
         FileViewerSheet(
             item = file,
             content = state.viewingContent,
+            tiltPanOffset = Offset(state.tiltState.panOffsetX, state.tiltState.panOffsetY),
+            tiltPitch = state.tiltState.pitch,
+            tiltRoll = state.tiltState.roll,
             onDismiss = { viewModel.closeFileViewer() }
         )
+    }
+
+    // Diálogos de Práctica 6 (Sensores, Bluetooth, Proxy Web, Biometría)
+    if (state.showSensorTelemetryDialog) {
+        SensorTelemetryDialog(
+            accelData = state.sensorDataAccel,
+            gyroData = state.sensorDataGyro,
+            tiltState = state.tiltState,
+            isSimulationMode = state.isSensorSimulationEnabled,
+            onToggleSimulation = { viewModel.toggleSensorSimulation() },
+            onInjectSimulated = { type, x, y, z -> viewModel.injectSimulatedSensorReading(type, x, y, z) },
+            onDismiss = { viewModel.closeSensorTelemetryDialog() }
+        )
+    }
+
+    if (state.showBluetoothTransferDialog) {
+        BluetoothTransferDialog(
+            selectedFile = state.selectedFileForTransfer,
+            availableFiles = state.items,
+            devices = state.bluetoothDevices,
+            connectedPeer = state.connectedPeer,
+            activeTransfer = state.activeTransfer,
+            transferHistory = state.transferHistory,
+            pendingOffer = state.pendingIncomingOffer,
+            onConnectDevice = { viewModel.connectToBluetoothDevice(it) },
+            onSendFile = { file, dev -> viewModel.sendFileViaBluetooth(file, dev) },
+            onSimulateTransfer = { file -> viewModel.simulateBluetoothTransfer(file) },
+            onShareViaSystemBluetooth = { file -> shareFileViaSystemBluetooth(context, file) },
+            onSimulateIncomingOffer = { viewModel.simulateIncomingTransferOffer() },
+            onAcceptIncoming = { viewModel.acceptIncomingTransfer() },
+            onRejectIncoming = { viewModel.rejectIncomingTransfer() },
+            onCancelTransfer = { viewModel.cancelActiveTransfer() },
+            onDismiss = { viewModel.closeBluetoothTransferDialog() }
+        )
+    }
+
+    if (state.showWebProxyDialog) {
+        WebProxyDialog(
+            initialUrl = state.proxyUrlInput,
+            lastResponse = state.lastProxyResponse,
+            cacheRecords = state.webCacheRecords,
+            isLoading = state.isProxyLoading,
+            onExecuteRequest = { viewModel.executeWebProxyRequest(it) },
+            onClearCache = { viewModel.clearWebProxyCache() },
+            onDismiss = { viewModel.closeWebProxyDialog() }
+        )
+    }
+
+    if (showBiometricVaultDialog) {
+        BiometricVaultDialog(
+            isUnlocked = state.isVaultUnlocked,
+            onUnlock = { viewModel.unlockVaultWithBiometrics() },
+            onLock = { viewModel.lockVault() },
+            onDismiss = { showBiometricVaultDialog = false }
+        )
+    }
+}
+
+private fun shareFileViaSystemBluetooth(context: Context, item: FileItem) {
+    try {
+        val rootDir = context.filesDir
+        val file = if (File(item.path).isAbsolute) File(item.path) else File(rootDir, item.path)
+        if (!file.exists()) {
+            Toast.makeText(context, "El archivo no se encuentra disponible", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            file
+        )
+        val btIntent = Intent(Intent.ACTION_SEND).apply {
+            type = item.mimeType
+            putExtra(Intent.EXTRA_STREAM, uri)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            setPackage("com.android.bluetooth")
+        }
+        try {
+            context.startActivity(btIntent)
+        } catch (_: Exception) {
+            val chooser = Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
+                type = item.mimeType
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }, "Transferir archivo por Bluetooth")
+            context.startActivity(chooser)
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Error al compartir por Bluetooth: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 }

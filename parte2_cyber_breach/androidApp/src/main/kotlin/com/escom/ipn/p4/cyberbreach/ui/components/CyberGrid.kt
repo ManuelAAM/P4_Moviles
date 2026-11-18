@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Adjust
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Dangerous
 import androidx.compose.material.icons.filled.FiberManualRecord
@@ -46,6 +47,7 @@ import com.escom.ipn.p4.cyberbreach.ui.theme.CellMissDot
 fun CyberGrid(
     grid: List<Int>,
     gridSize: Int = 8,
+    targetedCell: Int? = null,
     onCellClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -101,9 +103,11 @@ fun CyberGrid(
                 for (c in 0 until gridSize) {
                     val index = r * gridSize + c
                     val cellState = grid.getOrElse(index) { CELL_HIDDEN }
+                    val isTargeted = (targetedCell == index)
 
                     CyberCell(
                         cellState = cellState,
+                        isSensorTargeted = isTargeted,
                         onClick = { onCellClick(index) },
                         modifier = Modifier
                             .weight(1f)
@@ -119,57 +123,70 @@ fun CyberGrid(
 @Composable
 fun CyberCell(
     cellState: Int,
+    isSensorTargeted: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val (bgColor, borderColor) = when (cellState) {
-        CELL_HIDDEN -> Pair(CellHiddenColor, CellHiddenBorder)
-        CELL_MISS -> Pair(CellMissColor, CellMissDot.copy(alpha = 0.5f))
-        CELL_HIT -> Pair(CellHitColor.copy(alpha = 0.25f), CellHitColor)
-        CELL_DESTROYED -> Pair(CellDestroyedColor.copy(alpha = 0.35f), CellDestroyedColor)
+    val (bgColor, borderColor) = when {
+        isSensorTargeted -> Pair(Color(0x3300E5FF), Color(0xFF00E5FF))
+        cellState == CELL_HIDDEN -> Pair(CellHiddenColor, CellHiddenBorder)
+        cellState == CELL_MISS -> Pair(CellMissColor, CellMissDot.copy(alpha = 0.5f))
+        cellState == CELL_HIT -> Pair(CellHitColor.copy(alpha = 0.25f), CellHitColor)
+        cellState == CELL_DESTROYED -> Pair(CellDestroyedColor.copy(alpha = 0.35f), CellDestroyedColor)
         else -> Pair(CellHiddenColor, CellHiddenBorder)
     }
+
+    val borderWidth = if (isSensorTargeted) 2.dp else 1.dp
 
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .background(bgColor)
-            .border(1.dp, borderColor, RoundedCornerShape(4.dp))
+            .border(borderWidth, borderColor, RoundedCornerShape(4.dp))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-        when (cellState) {
-            CELL_HIDDEN -> {
-                // Celda oculta enigmática
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .background(CellHiddenBorder.copy(alpha = 0.6f), RoundedCornerShape(2.dp))
-                )
-            }
-            CELL_MISS -> {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Fallo",
-                    modifier = Modifier.size(14.dp),
-                    tint = CellMissDot
-                )
-            }
-            CELL_HIT -> {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = "Impacto",
-                    modifier = Modifier.size(16.dp),
-                    tint = CellHitColor
-                )
-            }
-            CELL_DESTROYED -> {
-                Icon(
-                    imageVector = Icons.Default.Dangerous,
-                    contentDescription = "Compromiso",
-                    modifier = Modifier.size(18.dp),
-                    tint = CellDestroyedColor
-                )
+        if (isSensorTargeted) {
+            Icon(
+                imageVector = Icons.Default.Adjust,
+                contentDescription = "Mira Giroscopio",
+                modifier = Modifier.size(16.dp),
+                tint = Color(0xFF00E5FF)
+            )
+        } else {
+            when (cellState) {
+                CELL_HIDDEN -> {
+                    // Celda oculta enigmática
+                    Box(
+                        modifier = Modifier
+                            .size(4.dp)
+                            .background(CellHiddenBorder.copy(alpha = 0.6f), RoundedCornerShape(2.dp))
+                    )
+                }
+                CELL_MISS -> {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Fallo",
+                        modifier = Modifier.size(14.dp),
+                        tint = CellMissDot
+                    )
+                }
+                CELL_HIT -> {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Impacto",
+                        modifier = Modifier.size(16.dp),
+                        tint = CellHitColor
+                    )
+                }
+                CELL_DESTROYED -> {
+                    Icon(
+                        imageVector = Icons.Default.Dangerous,
+                        contentDescription = "Compromiso",
+                        modifier = Modifier.size(18.dp),
+                        tint = CellDestroyedColor
+                    )
+                }
             }
         }
     }

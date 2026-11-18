@@ -4,7 +4,8 @@ import kotlinx.serialization.Serializable
 
 enum class GameMode(val displayName: String, val description: String) {
     INFILTRATION("Infiltración en Solitario", "Turnos libres para descubrir y neutralizar los nodos enemigos."),
-    CPU_DUEL("Cyber Duelo vs CPU", "Combate 1v1 por turnos: atacas a la red enemiga y la CPU contraataca tu infraestructura.")
+    CPU_DUEL("Cyber Duelo vs CPU", "Combate 1v1 por turnos: atacas a la red enemiga y la CPU contraataca tu infraestructura."),
+    BLUETOOTH_P2P("Ciberduelo Bluetooth 1v1", "Combate multijugador local sincronizado entre dos dispositivos.")
 }
 
 enum class SaveFormat(val extension: String) {
@@ -84,7 +85,16 @@ data class GameState(
     val isVictory: Boolean = false,
     val isDefeat: Boolean = false,
     val history: List<GameAction> = emptyList(),
-    val activeSkill: SkillType = SkillType.NORMAL
+    val activeSkill: SkillType = SkillType.NORMAL,
+    // Práctica 6: Multijugador Bluetooth y Sensores
+    val isMyTurn: Boolean = true,
+    val isBluetoothSession: Boolean = false,
+    val isHost: Boolean = true,
+    val opponentName: String = "Contrincante",
+    val targetedCellBySensor: Int? = null,
+    val sensorTiltActive: Boolean = false,
+    val kineticCooldownSeconds: Int = 0,
+    val bluetoothStatusMessage: String? = null
 ) {
     val totalNodes: Int get() = nodes.size
     val compromisedNodes: Int get() = nodes.count { it.isCompromised }
@@ -103,4 +113,39 @@ data class GameState(
 enum class CyberTheme {
     GUINDA_IPN,
     AZUL_ESCOM
+}
+
+@Serializable
+enum class GamePacketType {
+    HANDSHAKE,
+    HANDSHAKE_ACK,
+    ATTACK,
+    ATTACK_RESULT,
+    SURRENDER,
+    DISCONNECT
+}
+
+@Serializable
+data class CyberBreachPacket(
+    val type: GamePacketType,
+    val seq: Int,
+    val senderName: String,
+    val targetCell: Int = -1,
+    val skill: SkillType = SkillType.NORMAL,
+    val hitResult: String? = null, // "HIT", "MISS", "DESTROYED"
+    val destroyedNodeName: String? = null,
+    val isGameOver: Boolean = false,
+    val didAttackerWin: Boolean = false,
+    val timestamp: Long = 0L
+)
+
+interface IGameSensorListener {
+    fun onTiltAiming(targetCell: Int, pitch: Float, roll: Float)
+    fun onKineticShake()
+}
+
+interface IGameSensorManager {
+    fun startListening(listener: IGameSensorListener)
+    fun stopListening()
+    fun isAvailable(): Boolean
 }
