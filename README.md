@@ -1,5 +1,325 @@
 <div align="center">
 
+**🌐 Language / Idioma:** [🇺🇸 English Version](#-english-version) &nbsp;|&nbsp; [🇲🇽 Versión en Español](#-versión-en-español) &nbsp;|&nbsp; [🤖 AI Agents Context](README_FOR_IAS.md)
+
+</div>
+
+<a id="-english-version"></a>
+
+<div align="center">
+
+# NATIONAL POLYTECHNIC INSTITUTE
+### HIGHER SCHOOL OF COMPUTER SCIENCE (ESCOM)
+
+<br/>
+
+## **Native Mobile Applications Development**
+### **Practice 6: Mobile Device Sensor Handling & Bluetooth P2P Communication**
+#### **Kotlin Multiplatform (KMP) + Jetpack Compose + Hardware Sensors + Bluetooth RFCOMM**
+
+---
+
+**Professor:** M. Sc. Gabriel Hurtado Avilés  
+**Group:** 7CV4 &nbsp;|&nbsp; **Academic Term:** 2027-1  
+
+---
+
+### **Student**
+
+| Full Name | Student ID |
+| :--- | :---: |
+| **Aragón Martínez Manuel Alejandro** | 2023630411 |
+
+<br/>
+
+**Mexico City, November 2026**
+
+---
+
+</div>
+
+<br/>
+
+## 📑 Table of Contents
+1. [Executive Summary & Scope](#-executive-summary--scope)
+2. [Multiplatform Architecture (KMP)](#-multiplatform-architecture-kmp)
+3. [Exercise 1: Sensors & Interaction (Part 1 - File Manager)](#-exercise-1-sensors--interaction)
+4. [Exercise 2: Bluetooth File Transfer (Part 1)](#-exercise-2-bluetooth-file-transfer)
+5. [Exercise 3: Web Browsing via Bluetooth Proxy Relay (Part 1)](#-exercise-3-web-browsing-via-bluetooth-proxy-relay)
+6. [1v1 Bluetooth Cyber Duel & Sensors (Part 2 - Cyber Breach)](#-1v1-bluetooth-cyber-duel--sensors)
+7. [Comprehensive Quality Assurance Matrix (QA)](#-comprehensive-quality-assurance-matrix-qa)
+8. [Evidence & Screenshots Guide (Samsung Galaxy A54)](#-evidence--screenshots-guide)
+9. [Build & Execution Instructions](#-build--execution-instructions)
+10. [Technical Conclusions & APA References](#-technical-conclusions--apa-references)
+
+---
+
+## 📋 Executive Summary & Scope
+
+**Practice 6** extends the dual mobile solutions developed in Practice 4 (Multiplatform File Manager and Cyber Breach / Net Strike Tactical Grid Game) by incorporating advanced native hardware and wireless communication capabilities:
+- **Physical Sensors:** Real-time sampling and mathematical processing of **Accelerometer** and **Gyroscope** telemetry ($m/s^2$ and $rad/s$), shake gesture detection, tilt-to-pan image viewer navigation, kinetic gyroscope reticle aiming on an 8×8 tactical grid, and kinetic recharge with cooldown.
+- **Biometric Security:** Sensitive document protection using **BiometricPrompt API** (Android API 24+) and `LocalAuthentication` (iOS), supporting fingerprint, facial recognition, and screen lock PIN/credentials.
+- **Wireless Bluetooth RFCOMM Peer-to-Peer Communication (100% Offline):**
+  1. *Reliable File Transfer:* 4 KB chunking protocol with Stop-and-Wait sequential ACK, cryptographic **SHA-256** checksum calculation, private `.tmp` staging with atomic renaming, and transfer history tracking with explicit statuses.
+  2. *Web Proxy Relay:* Gateway-Viewer topology allowing an offline device (Airplane Mode / No Wi-Fi / No Cellular Data) to browse public HTTP/HTTPS endpoints through an online gateway device over RFCOMM, including strict SSRF mitigation and local timestamped cache fallback.
+  3. *Synchronized 1v1 Multiplayer Battles:* Real-time turn-based multiplayer battle over Bluetooth RFCOMM, strict turn enforcement, sequence numbering (`seq`) to reject duplicates, and clean disconnection handling without memory leaks.
+- **Institutional Compliance:** Strict implementation of institutional color palettes (**IPN Maroon** `#6C1D45` and **ESCOM Blue** `#003366`), Clean Architecture separation of concerns, and full KMP support targeting Android API 24+ and iOS 15+.
+
+---
+
+## 🏛 Multiplatform Architecture (KMP)
+
+The project adheres to **Clean Architecture** principles combined with MVI/MVVM and Unidirectional Data Flow (UDF):
+
+```
+practica4_Moviles/
+├── parte1_gestor_archivos/
+│   ├── shared/
+│   │   ├── src/commonMain/kotlin/com/escom/ipn/p4/filemanager/
+│   │   │   ├── model/ (SensorModels, BiometricModels, BluetoothModels, HttpProxyModels)
+│   │   │   ├── service/ (BluetoothProtocolService, ISensorManager, IBluetoothTransferService, Sha256Util)
+│   │   │   └── viewmodel/ (FileManagerViewModel)
+│   │   ├── src/androidMain/kotlin/com/escom/ipn/p4/filemanager/service/
+│   │   │   ├── AndroidSensorManager.kt
+│   │   │   ├── AndroidBiometricAuthService.kt
+│   │   │   ├── AndroidBluetoothService.kt
+│   │   │   └── Sha256Util.android.kt
+│   │   └── src/iosMain/kotlin/com/escom/ipn/p4/filemanager/service/ (iOS Stubs)
+│   └── androidApp/src/main/kotlin/com/escom/ipn/p4/filemanager/
+│       ├── MainActivity.kt (FragmentActivity with onPause/onResume lifecycle hooks)
+│       └── ui/components/
+│           ├── SensorTelemetryDialog.kt
+│           ├── BluetoothTransferDialog.kt
+│           ├── WebProxyDialog.kt
+│           ├── BiometricVaultDialog.kt
+│           └── FileViewerSheet.kt (Tilt-to-pan gyroscope navigation)
+└── parte2_cyber_breach/
+    ├── shared/
+    │   ├── src/commonMain/kotlin/com/escom/ipn/p4/cyberbreach/
+    │   │   ├── model/ (CyberBreachModels, CyberBreachPacket, IGameSensorManager)
+    │   │   ├── service/ (GameEngine, IBluetoothGameService)
+    │   │   └── viewmodel/ (CyberBreachViewModel)
+    │   ├── src/androidMain/kotlin/com/escom/ipn/p4/cyberbreach/service/
+    │   │   ├── AndroidGameSensorManager.kt (Tilt aiming & Kinetic shake)
+    │   │   └── AndroidBluetoothGameService.kt (RFCOMM 1v1 Sync)
+    │   └── src/iosMain/kotlin/com/escom/ipn/p4/cyberbreach/service/
+    └── androidApp/src/main/kotlin/com/escom/ipn/p4/cyberbreach/
+        ├── MainActivity.kt
+        └── ui/
+            ├── CyberBreachScreen.kt (Bluetooth HUD and sensor controls)
+            ├── components/
+            │   ├── CyberGrid.kt (Kinetic aiming reticle)
+            │   ├── BluetoothLobbyDialog.kt
+            │   └── PlayerDefenseGrid.kt
+            └── screens/TitleMenuScreen.kt
+```
+
+---
+
+## 📱 Exercise 1: Sensors & Interaction
+
+### 1. Accelerometer and Gyroscope Telemetry
+- **Accelerometer:** Measures device linear acceleration along the three spatial axes ($a_x, a_y, a_z$) in $m/s^2$, capturing orientation relative to Earth's gravitational acceleration ($g \approx 9.81\text{ }m/s^2$).
+- **Gyroscope:** Measures angular rotation rate $(\omega_x, \omega_y, \omega_z)$ in radians per second ($rad/s$), determining rotation velocity.
+- **Lifecycle Management & Energy Conservation:**
+  In strict accordance with Android best practices and the assignment rubric:
+  - When the activity transitions to the background (`onPause`), the listener is instantly detached via `sensorManager.unregisterListener(this)`, halting hardware polling and eliminating battery drain.
+  - Upon foreground resumption (`onResume`), listeners re-register using `SENSOR_DELAY_UI` or `SENSOR_DELAY_GAME`.
+- **Simulation / Test Mode:**
+  The `SensorTelemetryDialog` component includes a mock data simulation toggle and QA value injection buttons to facilitate test execution without requiring physical phone tilting.
+
+### 2. Shake Gesture Detection
+Instantaneous $g$-force is evaluated as:
+$$g_{\text{force}} = \frac{\sqrt{a_x^2 + a_y^2 + a_z^2}}{g_{\text{earth}}}$$
+If $g_{\text{force}} > 2.2$ with an enforced debouncing threshold of $\Delta t \ge 800\text{ ms}$, haptic feedback is triggered alongside a contextual action (e.g., list shuffle or view reset).
+
+### 3. Tilt-to-Pan Image Navigation
+In `FileViewerSheet`, physical device pitch and roll angles continuously translate image viewport coordinates $(x, y)$, enabling natural pan exploration across high-resolution images.
+
+### 4. Biometric Vault Protection
+Confidential files are secured using AndroidX `BiometricPrompt`:
+- Enforces strong biometric authentication (`BIOMETRIC_STRONG`) or fallback device credentials (`DEVICE_CREDENTIAL`).
+- In-memory vault isolation: vault records are only decrypted and shown following successful biometric verification.
+
+---
+
+## 📡 Exercise 2: Bluetooth File Transfer
+
+Facilitates sharing `.txt`, `.xml`, `.json`, and `.jpg` files directly between two devices over an RFCOMM channel using UUID `fa87c0d0-afac-11de-8a39-0800200c9a66`:
+
+### Protocol Stages:
+1. **Device Discovery:** Reactive list of paired system devices.
+2. **Metadata Handshake & Explicit Acceptance:** Sender transmits `FileTransferMetadataPacket` containing file name, byte size, chunk count, and expected SHA-256 hash. The receiver inspects details in a modal dialog and must explicitly choose `ACCEPT` or `REJECT`.
+3. **Chunking:** Data is sliced into **4,096-byte (4 KB)** chunks encoded in Base64.
+4. **Sequential Stop-and-Wait ACK:** Each chunk requires receiver acknowledgement (`TransferAckPacket`) before the next chunk is dispatched, preventing buffer overruns and providing accurate progress updates.
+5. **Private Staging (.tmp):** Incoming chunks are incrementally appended to `incoming_transfer.tmp`.
+6. **SHA-256 Integrity Verification:** Once all chunks are received, the receiver computes the SHA-256 hash across the staged file and validates it against the sender's expected hash:
+   - On match: atomically renamed to target filename and recorded as `COMPLETED`.
+   - On mismatch or cancellation: `.tmp` staging file is immediately deleted.
+7. **Transfer History:** Persistent record of transfer jobs with statuses: `PENDING`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`, and `FAILED`.
+
+---
+
+## 🌐 Exercise 3: Web Browsing via Bluetooth Proxy Relay
+
+Enables an offline device (**Device B - Viewer** with Wi-Fi and mobile data disabled) to browse approved web resources through an online gateway (**Device A - Gateway**) over Bluetooth:
+
+### Architecture:
+```
+[Device B: Offline Viewer]  <--- Bluetooth RFCOMM --->  [Device A: Online Gateway]  <--- HTTPS --->  [Web Services]
+ (Airplane Mode / Offline)                               (Wi-Fi / Cellular Data)
+```
+
+1. **Relayed Request:** Device B sends an `HttpProxyRequest` containing URL, HTTP method, and headers.
+2. **Security & SSRF Mitigation:**
+   The Gateway filters requests against an approved domain whitelist:
+   - `jsonplaceholder.typicode.com`
+   - `pokeapi.co`
+   - `worldtimeapi.org`
+   - `api.github.com/zen`
+   Requests targeting private IP addresses (RFC 1918: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), `localhost`, `127.0.0.1`, or cloud metadata endpoints are immediately rejected.
+3. **HTTP Execution & Relay:** Device A executes the HTTPS request and transmits back the status code, response headers, and body in `HttpProxyResponse`.
+4. **Persistent Local Cache:** Device B persists responses in private local storage with timestamps. If Bluetooth disconnects, the viewer seamlessly displays cached responses flagged with `[OFFLINE MODE - LOCAL CACHE]`.
+
+---
+
+## 🎮 1v1 Bluetooth Cyber Duel & Sensors
+
+In **Part 2 (Cyber Breach / Net Strike)**, a real-time turn-based multiplayer mode over Bluetooth RFCOMM (UUID `e0cbf06c-cd8b-4647-bb8a-263b43f0f974`) is integrated:
+
+### Multiplayer Mechanics:
+- **Host / Client Roles:** One device hosts the session; the peer joins from the paired list.
+- **Strict Turn Synchronization:** Each player defends their own hidden infrastructure while firing upon the opponent's grid. The Host takes Turn 1. Out-of-turn actions are locked out with dynamic HUD banners:
+  - `🟢 YOUR TURN TO STRIKE!`
+  - `⏳ OPPONENT'S TURN (Waiting for strike...)`
+- **Duplicate Rejection & Disconnect Handling:** Packets feature monotonically increasing sequence numbers (`seq`). Stale or duplicate frames are ignored. Clean socket teardown prevents crashes if a peer disconnects.
+
+### Sensor Mechanics:
+1. **Optional Low-Pass Filtered Gyroscope Aiming:** Players can seamlessly toggle between **Touch Mode** and **Gyroscope Aiming** via the in-game `[Activar Giroscopio]` / `[Giroscopio: ACTIVO]` button. When enabled, a low-pass filtered gravity vector ($\alpha = 0.12$, 180 ms cell transition hysteresis) smoothly steers a cyan targeting reticle across the 8×8 grid (A1–H8), pairing with the `Disparar Mira` button without erratic sensor jitter.
+2. **Calibrated Kinetic Shake Recharge:** Shaking the device vigorously ($g_{\text{force}} > 3.2\text{ G}$ threshold to avoid accidental hand-movement triggers) channels kinetic energy into **+5 EN Tactical Energy** for special abilities (*Ping Sweep* or *DDoS Attack*), regulated by a **15-second cooldown timer**.
+
+---
+
+## 🧪 Comprehensive Quality Assurance Matrix (QA)
+
+| ID | Module | Category | Test Objective | Result | Status |
+|:---:|:---:|:---:|:---|:---|:---:|
+| **CP-01** | File Manager | Hardware | Real-time Accelerometer & Gyroscope telemetry ($X,Y,Z$, $m/s^2$, $rad/s$) and listener cleanup on `onPause`. | Telemetry updates accurately; listeners unregister on pause. | **PASSED** |
+| **CP-02** | File Manager | Gestures | Image tilt-to-pan navigation and shake detection with 800ms debouncing window. | Smooth viewport translation and prompt shake trigger. | **PASSED** |
+| **CP-03** | File Manager | Security | Biometric authentication via `BiometricPrompt` protecting sensitive vault files. | Vault securely locks; unlocks only on valid fingerprint/PIN. | **PASSED** |
+| **CP-04** | File Manager | Networking | Bluetooth discovery, metadata handshake, and modal explicit recipient confirmation. | Transfers proceed exclusively upon recipient acceptance. | **PASSED** |
+| **CP-05** | File Manager | Networking | 4 KB chunking with Stop-and-Wait ACK and mid-transfer clean cancellation. | Smooth progress bar; `.tmp` staging file purged on abort. | **PASSED** |
+| **CP-06** | File Manager | Integrity | SHA-256 cryptographic verification and transfer history logging. | 100% hash match, atomic rename, and `COMPLETED` status. | **PASSED** |
+| **CP-07** | File Manager | Relay | Bluetooth Web Proxy: offline Device B queries public API via online Gateway Device A. | HTTP 200 response rendered on offline viewer. | **PASSED** |
+| **CP-08** | File Manager | Security | SSRF prevention (private IP blocking) and local cache fallback with timestamps. | Private IPs blocked; offline cache fallback functional. | **PASSED** |
+| **CP-09** | Video Game | Networking | Synchronized 1v1 Bluetooth duel with strict turn validation in Cyber Breach. | Alternating turn state machine operates deterministically. | **PASSED** |
+| **CP-10** | Video Game | Sensors | Gyroscope reticle aiming on 8x8 grid and +5 EN kinetic shake recharge with 15s cooldown. | Cyan reticle tracks tilt; shake grants energy with cooldown. | **PASSED** |
+
+---
+
+## 📸 Evidence & Screenshots Guide (Physical Samsung Galaxy A54 Device)
+
+Actual testing screenshots captured on physical hardware (**Samsung Galaxy A54**):
+
+### Part 1: Multiplatform File Manager
+
+| Test Case | Screenshot (Samsung Galaxy A54) | Technical Description |
+| :--- | :---: | :--- |
+| **Gyroscope & Tilt-to-Pan (HUD Telemetry)** | <img src="docs/capturas/parte1/02_visor_imagen_inclinacion_hud.jpg" width="220" alt="HUD Tilt Telemetry" /> | Real-time image viewer with 2D level bubble, green `[ACTIVO]` badge, and dynamic Pitch, Roll, and pan offset calculations on physical device tilt. |
+| **Secure Vault & Biometrics (Authorized)** | <img src="docs/capturas/parte1/boveda_protegida_acceso_autorizado_archivos.jpg" width="220" alt="Unlocked Vault" /> | Successful vault unlock using native `BiometricPrompt` (fingerprint / device PIN). |
+| **Secure Vault (Protected Files)** | <img src="docs/capturas/parte1/boveda_protegida_archivos.jpg" width="220" alt="Vault Files" /> | Authorized listing of confidential files isolated inside app-private internal storage. |
+| **Bluetooth Transfer & Compatibility** | <img src="docs/capturas/parte1/03_bluetooth_seleccion_archivo_iphone_incompatible.jpg" width="220" alt="Bluetooth Selection" /> | Clean file selection chips `[Imagen]`, `[Archivo 1]`, `[Archivo 2]` with device detection and peer compatibility evaluation. |
+| **Incoming Bluetooth File Reception** | <img src="docs/capturas/parte1/05_bluetooth_recepcion_archivos.jpg" width="220" alt="Bluetooth Reception" /> | Incoming transfer challenge with file metadata and explicit acceptance modal dialog before streaming. |
+| **Transfer History & SHA-256 Verification** | <img src="docs/capturas/parte1/05_bluetooth_historial_completado.jpg" width="220" alt="Transfer History" /> | Historical log displaying transferred file, byte size, `EXITOSO` status, timestamp, and mathematical SHA-256 integrity match. |
+| **Web Proxy Relay (Selection Menu)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_menu.jpg" width="220" alt="Proxy Relay Menu" /> | Bluetooth web proxy relay dialog with preset endpoint chips (`Posts`, `Hora CDMX`, `PokeAPI`). |
+| **Web Proxy Relay (Posts JSON Response)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_posts.jpg" width="220" alt="Posts Response" /> | JSON REST payload received via Bluetooth proxy hop while completely isolated from the internet. |
+| **Web Proxy Relay (PokeAPI Response)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_pokeapi.jpg" width="220" alt="PokeAPI Response" /> | HTTP 200 OK response from public API forwarded intact over the local Bluetooth link. |
+| **SSRF Mitigation (Private IP Blocked)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_ipprivada_prohibida.jpg" width="220" alt="SSRF Protection" /> | Strict security enforcement rejecting requests targeting private/internal network addresses (SSRF prevention). |
+
+### Part 2: Cyber Breach Video Game — Real Comparative Evidence (Host vs Client)
+
+Real-device physical testing over bidirectional **Android ↔ Android** Bluetooth RFCOMM without Wi-Fi or Firebase dependencies:
+- **Host Device:** Samsung Galaxy A54 (`Android 14+`)
+- **Client Device:** HONOR Magic 7 Pro (`MagicOS / Android 14+`)
+
+| P2P Match Stage | Host (Samsung Galaxy A54) | Client (HONOR Magic 7 Pro) | Practica 6 Requirement Fulfilled |
+| :--- | :---: | :---: | :--- |
+| **1. Bluetooth P2P Lobby & Role Selection** | <img src="docs/capturas/parte2/01_bluetooth_lobby_host_a54.jpg" width="210" alt="Host Lobby A54" /> | <img src="docs/capturas/parte2/02_bluetooth_lobby_cliente_honor.jpg" width="210" alt="Client Lobby HONOR" /> | **Pairing, Permissions & Roles:** Host binds RFCOMM `BluetoothServerSocket` on dedicated UUID; Client enumerates paired peers after granting `BLUETOOTH_CONNECT` and taps `UNIRSE`. |
+| **2. Handshake & Turn Synchronization** | <img src="docs/capturas/parte2/03_conexion_exitosa_host_a54.jpg" width="210" alt="Host Connected" /> | <img src="docs/capturas/parte2/04_conexion_exitosa_cliente_honor.jpg" width="210" alt="Client Connected" /> | **Strict Turn Enforcement:** Host confirms peer connection and gets green `¡TU TURNO DE ATACAR!` banner; Client locks input displaying `⏳ TURNO DEL CONTRINCANTE`. |
+| **3. Defense Grids & Packet Synchronization** | <img src="docs/capturas/parte2/05_red_defensa_host_a54.jpg" width="210" alt="Host Defense Grid" /> | <img src="docs/capturas/parte2/06_red_defensa_cliente_honor.jpg" width="210" alt="Client Defense Grid" /> | **Sequential Packet Protocol (`seq`):** Bidirectional attack/defense exchange (`H1`, `C3`, `G3`) updated live across `TU RED (DEFENSA)` grids and battle console logs. |
+
+#### 🎥 Hardware Sensors Combat Video (Optional Gyroscope + Touch Mode)
+- **Video File:** [`docs/capturas/parte2/07_video_sensores_combate_cyber_breach.mp4`](docs/capturas/parte2/07_video_sensores_combate_cyber_breach.mp4)
+- **Physical Device Verification (Samsung A54):**
+  1. Begins in **Direct Touch Mode** (`[Activar Giroscopio]`).
+  2. Toggles **`Giroscopio: ACTIVO`**, smoothly gliding the cyan aiming reticle across the 8×8 grid via low-pass filtered tilt (`C3 → A4 → B2 → F1 → D7 → H4`) and firing via **`Disparar Mira`**.
+  3. Cleanly toggles gyroscope off back into touch control, striking an enemy node directly (`E3`: `+10 EN`).
+
+#### 📡 Transport & Hardware Pair Compatibility Matrix
+| Hardware Pair | Transport Layer | Tested Roles | Status | Technical Notes |
+| :--- | :--- | :--- | :---: | :--- |
+| **Samsung A54 (Android) ↔ HONOR Magic 7 Pro (Android)** | Bluetooth Classic RFCOMM (SPP UUID) | Bidirectional Host ↔ Client | **VERIFIED** | Pure offline P2P communication. Runtime Android 12+ (`BLUETOOTH_CONNECT`/`SCAN`) permissions requested cleanly. |
+| **Android ↔ PC / Laptop** | System OPP (`Intent.ACTION_SEND`) | Sender (Android) → Receiver (PC) | **VERIFIED** | Real JPG file transfer via Android native Bluetooth dispatcher in Part 1. |
+| **Android ↔ iOS (iPhone)** | RFCOMM vs CoreBluetooth (BLE GATT) | — | **UNVERIFIED** | Explicitly declared per Practica 6 guidelines: iOS restricts open SPP/RFCOMM to MFi accessories; Android–iOS interoperability requires BLE GATT bridging. |
+
+---
+
+## 🚀 Build & Execution Instructions
+
+### Prerequisites:
+- **Android Studio:** Ladybug (2024.2.1) or higher with JDK 17 or 21.
+- **Android SDK:** API Level 35 (Android 15) with Build Tools 35.0.0.
+- **Target Device:** Physical Android device (API 24+) with Bluetooth and Sensors (e.g. Samsung Galaxy A54).
+
+### Gradle Commands:
+
+```powershell
+# Compile Part 1: File Manager
+cd "parte1_gestor_archivos"
+.\gradlew.bat :androidApp:assembleDebug
+
+# Compile Part 2: Cyber Breach Video Game
+cd "..\parte2_cyber_breach"
+.\gradlew.bat :androidApp:assembleDebug
+```
+
+Generated APKs:
+- `parte1_gestor_archivos/androidApp/build/outputs/apk/debug/androidApp-debug.apk`
+- `parte2_cyber_breach/androidApp/build/outputs/apk/debug/androidApp-debug.apk`
+
+---
+
+## 📚 Technical Conclusions & APA References
+
+### Technical Conclusions:
+1. **Platform Independence with KMP:** Declaring clean interfaces and `expect`/`actual` abstractions in `commonMain` isolated business logic from Android SDK specifics, maintaining pure domain portability for future iOS targets.
+2. **Reliability in Ad-Hoc Networks:** Employing framed RFCOMM sockets with sequential Stop-and-Wait ACK ensured zero data loss over short-range radio links without external cloud dependencies.
+3. **Lifecycle-Aware Hardware Usage:** Explicitly decoupling sensor listeners in `onPause()` prevents battery drain and optimizes device power consumption.
+
+### References (APA 7th Edition):
+- Android Developers. (2024). *Sensors overview & SensorManager documentation*. Google Developers. https://developer.android.com/develop/sensors-and-location/sensors/sensors_overview
+- Android Developers. (2024). *Bluetooth RFCOMM and device pairing guide*. Google Developers. https://developer.android.com/develop/connectivity/bluetooth
+- Android Developers. (2024). *BiometricPrompt API reference*. Google Developers. https://developer.android.com/reference/androidx/biometric/BiometricPrompt
+- JetBrains. (2024). *Kotlin Multiplatform overview and shared code architecture*. JetBrains s.r.o. https://kotlinlang.org/docs/multiplatform.html
+- Martin, R. C. (2018). *Clean Architecture: A craftsman's guide to software structure and design*. Prentice Hall.
+
+<br/>
+
+---
+
+<div align="center">
+
+# 🇲🇽 VERSIÓN EN ESPAÑOL
+### *(Spanish Version — Documentación Completa en Español)*
+
+[⬆️ Volver al Inicio (English Version)](#-english-version)
+
+</div>
+
+<a id="-versión-en-español"></a>
+
+<div align="center">
+
 # INSTITUTO POLITÉCNICO NACIONAL
 ### ESCUELA SUPERIOR DE CÓMPUTO
 
@@ -188,8 +508,8 @@ En la **Parte 2 (Cyber Breach / Net Strike)**, se integra un modo multijugador l
 - **Tolerancia a Duplicados y Desconexión:** Cada paquete incluye un contador de secuencia `seq`. Paquetes repetidos o desordenados son descartados automáticamente. Si un jugador abandona, el socket se libera sin generar cuelgues ni excepciones.
 
 ### Integración de Sensores en el Juego:
-1. **Apuntado Cinético por Giroscopio:** Al inclinar el teléfono en cualquier dirección, un retículo de mira cian de alta visibilidad recorre las 64 celdas del tablero (A1 a H8) reflejando los ángulos de pitch y roll del giroscopio. El botón `Disparar Mira` permite ejecutar el disparo en la coordenada exacta seleccionada por movimiento.
-2. **Recarga Cinética por Agitación:** Agitar el teléfono con vigor transmite energía cinética a los condensadores del juego, otorgando **+5 EN de Energía Táctica** para desbloquear habilidades como *Ping Sweep* o *DDoS Attack*. Para balancear el juego y evitar abusos, se incorpora un **temporizador de enfriamiento de 15 segundos** con contador decreciente en el HUD.
+1. **Apuntado Cinético Opcional por Giroscopio (Filtro Pasa-Bajas):** El jugador puede conmutar libremente entre **Modo Táctil** y **Mira por Giroscopio** mediante el botón `[Activar Giroscopio]` / `[Giroscopio: ACTIVO]`. Al activarse, un filtro inercial pasa-bajas ($\alpha = 0.12$, histéresis de 180 ms) guía suavemente el retículo cian en las 64 celdas (A1–H8) sin vibraciones erráticas, permitiendo disparar con `Disparar Mira`.
+2. **Recarga Cinética por Agitación Calibrada:** Agitar el teléfono con firmeza ($g_{\text{force}} > 3.2\text{ G}$ para evitar disparos accidentales) transmite energía cinética otorgando **+5 EN de Energía Táctica** para habilidades (*Ping Sweep* o *DDoS Attack*), regulada por un **enfriamiento estricto de 15 segundos**.
 
 ---
 
@@ -229,12 +549,31 @@ Para la entrega formal y la evaluación técnica, se integran las evidencias obt
 | **Proxy Relay Web (Respuesta PokeAPI)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_pokeapi.jpg" width="220" alt="Respuesta PokeAPI" /> | Respuesta HTTP 200 OK con payload de API pública retransmitido íntegramente por el enlace Bluetooth local. |
 | **Mitigación SSRF (IP Privada Prohibida)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_ipprivada_prohibida.jpg" width="220" alt="Protección SSRF" /> | Mecanismo de seguridad que rechaza de forma estricta peticiones dirigidas a IPs privadas o locales (prevención SSRF). |
 
-### Parte 2: Videojuego Cyber Breach
-*(Capturas correspondientes al ciberduelo multijugador Bluetooth 1v1 y sensores en combate en proceso de integración)*
-1. **Lobby Multijugador Bluetooth:** Diálogo de selección de rol (Hospedar / Unirse) con el listado de dispositivos vinculados.
-2. **Banner de Turno Sincronizado 1v1:** Tablero táctico 8×8 con el banner superior `🟢 ¡TU TURNO DE ATACAR!` y estado del oponente.
-3. **Mira Cinética de Giroscopio en Cuadrícula:** Celda destacada con retícula cian en la cuadrícula enemiga y coordenadas activas en el HUD.
-4. **Recarga Cinética por Agitación:** Notificación en el HUD de `¡Recarga Cinética por Agitación! +5 EN` y temporizador de enfriamiento decreciente.
+### Parte 2: Videojuego Cyber Breach — Evidencia Comparativa Real (Host vs Cliente)
+
+Pruebas físicas reales en sesión Bluetooth RFCOMM bidireccional **Android ↔ Android** sin dependencia de Wi-Fi ni Firebase, ejecutadas entre:
+- **Dispositivo Anfitrión (Host):** Samsung Galaxy A54 (`Android 14+`)
+- **Dispositivo Cliente (Client):** HONOR Magic 7 Pro (`MagicOS / Android 14+`)
+
+| Etapa de la Partida P2P | Anfitrión (Host - Samsung A54) | Cliente (HONOR Magic 7 Pro) | Requisito Cumplido (Práctica 6) |
+| :--- | :---: | :---: | :--- |
+| **1. Lobby Bluetooth P2P y Selección de Roles** | <img src="docs/capturas/parte2/01_bluetooth_lobby_host_a54.jpg" width="210" alt="Host Lobby A54" /> | <img src="docs/capturas/parte2/02_bluetooth_lobby_cliente_honor.jpg" width="210" alt="Cliente Lobby HONOR" /> | **Emparejamiento, Permisos y Roles:** Host abre socket `BluetoothServerSocket` en UUID dedicado; Cliente lista dispositivos vinculados tras conceder `BLUETOOTH_CONNECT` y ejecuta `UNIRSE`. |
+| **2. Handshake y Sincronización de Turnos** | <img src="docs/capturas/parte2/03_conexion_exitosa_host_a54.jpg" width="210" alt="Conexión Host" /> | <img src="docs/capturas/parte2/04_conexion_exitosa_cliente_honor.jpg" width="210" alt="Conexión Cliente" /> | **Control Estricto de Turnos:** Host recibe notificación `¡Conexión establecida con Jugador 2!` y banner verde `¡TU TURNO DE ATACAR!`; Cliente bloquea disparos mostrando `⏳ TURNO DEL CONTRINCANTE`. |
+| **3. Tableros de Defensa y Tránsito de Ataques** | <img src="docs/capturas/parte2/05_red_defensa_host_a54.jpg" width="210" alt="Red Defensa Host" /> | <img src="docs/capturas/parte2/06_red_defensa_cliente_honor.jpg" width="210" alt="Red Defensa Cliente" /> | **Protocolo de Paquetes Secuenciales (`seq`):** Intercambio de coordenadas (`H1`, `C3`, `G3`) con actualización sincronizada en la pestaña `TU RED (DEFENSA)` y consola de combate. |
+
+#### 🎥 Video Demostrativo de Sensores Hardware en Combate (Giroscopio Opcional + Tacto)
+- **Archivo:** [`docs/capturas/parte2/07_video_sensores_combate_cyber_breach.mp4`](docs/capturas/parte2/07_video_sensores_combate_cyber_breach.mp4)
+- **Demostración en dispositivo físico (Samsung A54):**
+  1. Inicio en **Control Táctil Activo** (`[Activar Giroscopio]`).
+  2. Activación dinámica del botón **`Giroscopio: ACTIVO`** desplazando suavemente la retícula cian por la cuadrícula 8×8 con filtro pasa-bajas (`C3 → A4 → B2 → F1 → D7 → H4`) y ejecución de ataque con **`Disparar Mira`**.
+  3. Desactivación instantánea del giroscopio para regresar al toque directo sin interferencias e impacto confirmado en nodo (`E3`: `+10 EN`).
+
+#### 📡 Matriz de Transporte y Pares Verificados (Compatibilidad)
+| Par de Hardware | Transporte | Roles Verificados | Estado | Observaciones Técnicas |
+| :--- | :--- | :--- | :---: | :--- |
+| **Samsung A54 (Android) ↔ HONOR Magic 7 Pro (Android)** | Bluetooth Classic RFCOMM (SPP UUID) | Host ↔ Cliente bidireccional | **VERIFICADO** | Comunicación directa sin Internet/Wi-Fi. Permisos Android 12+ (`BLUETOOTH_CONNECT`/`SCAN`) solicitados en runtime. |
+| **Android ↔ PC / Laptop** | System OPP (`Intent.ACTION_SEND`) | Emisor (Android) → Receptor (PC) | **VERIFICADO** | Transferencia de archivo JPG de prueba en Parte 1 mediante selector nativo de Android. |
+| **Android ↔ iOS (iPhone)** | RFCOMM vs CoreBluetooth (BLE GATT) | — | **NO VERIFICADO** | Declarado expresamente: iOS restringe SPP/RFCOMM abierto a accesorios MFi; interoperabilidad iOS–Android requiere puente BLE GATT (`CBPeripheralManager` / `BluetoothGatt`). |
 
 ---
 

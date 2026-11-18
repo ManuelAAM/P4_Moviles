@@ -33,9 +33,11 @@ This repository implements a **Kotlin Multiplatform (KMP)** native application e
   $$\text{Gyroscope} = (\omega_x, \omega_y, \omega_z) \quad [rad/s]$$
 - **Shake Detection Algorithm:**
   $$g_{\text{force}} = \frac{\sqrt{a_x^2 + a_y^2 + a_z^2}}{g_{\text{earth}}}$$
-  Triggers a shake event when $g_{\text{force}} > 2.2$ with an enforced debouncing window of $\Delta t \ge 800\text{ ms}$.
-- **Tilt-to-Pan (File Viewer) & Aiming Reticle (Cyber Breach):**
-  Continuous mapping of pitch ($\theta$) and roll ($\phi$) angles to 2D coordinate displacement $(\Delta x, \Delta y)$ and grid cells $(r, c) \in [0, 7] \times [0, 7]$.
+  Triggers a kinetic shake event when $g_{\text{force}} > 3.2$ (game calibration) / $> 2.2$ (telemetry HUD) with an enforced debouncing window of $\Delta t \ge 1500\text{ ms}$.
+- **Tilt-to-Pan (File Viewer) & Optional Aiming Reticle (Cyber Breach):**
+  Continuous mapping of smoothed pitch ($\theta$) and roll ($\phi$) gravity vectors ($\alpha = 0.12$ low-pass filter + 180 ms hysteresis) to 2D coordinate displacement $(\Delta x, \Delta y)$ and grid cells $(r, c) \in [0, 7] \times [0, 7]$. Gyroscope aiming in Cyber Breach is optional via `isGyroAimingEnabled` toggle.
+- **Runtime Permissions (Android 12+ / API 31+):**
+  Both `MainActivity` entry points explicitly prompt `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, and `BLUETOOTH_ADVERTISE` via `ActivityResultContracts.RequestMultiplePermissions` before enumerating `bondedDevices` or opening RFCOMM sockets.
 - **Energy Conservation & Lifecycle Rule:**
   Sensors MUST NOT run when the activity is backgrounded.
   - `onPause()`: Invokes `sensorManager.unregisterListener(this)` and transitions status to `PAUSED`.

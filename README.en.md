@@ -187,8 +187,8 @@ In **Part 2 (Cyber Breach / Net Strike)**, a real-time turn-based multiplayer mo
 - **Duplicate Rejection & Disconnect Handling:** Packets feature monotonically increasing sequence numbers (`seq`). Stale or duplicate frames are ignored. Clean socket teardown prevents crashes if a peer disconnects.
 
 ### Sensor Mechanics:
-1. **Gyroscope Tilt Aiming:** Tilting the phone navigates a cyan reticle across the 8×8 grid (A1 to H8) mapped to physical pitch and roll angles. A dedicated `Fire at Reticle` button executes attacks directly at the targeted coordinates.
-2. **Kinetic Shake Recharge:** Shaking the device channels kinetic energy, granting **+5 EN Tactical Energy** to activate special abilities (*Ping Sweep* or *DDoS Attack*). A **15-second cooldown timer** prevents shake abuse.
+1. **Optional Low-Pass Filtered Gyroscope Aiming:** Players can seamlessly toggle between **Touch Mode** and **Gyroscope Aiming** via the in-game `[Activar Giroscopio]` / `[Giroscopio: ACTIVO]` button. When enabled, a low-pass filtered gravity vector ($\alpha = 0.12$, 180 ms cell transition hysteresis) smoothly steers a cyan targeting reticle across the 8×8 grid (A1–H8), pairing with the `Disparar Mira` button without erratic sensor jitter.
+2. **Calibrated Kinetic Shake Recharge:** Shaking the device vigorously ($g_{\text{force}} > 3.2\text{ G}$ threshold to avoid accidental hand-movement triggers) channels kinetic energy into **+5 EN Tactical Energy** for special abilities (*Ping Sweep* or *DDoS Attack*), regulated by a **15-second cooldown timer**.
 
 ---
 
@@ -228,12 +228,31 @@ Actual testing screenshots captured on physical hardware (**Samsung Galaxy A54**
 | **Web Proxy Relay (PokeAPI Response)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_pokeapi.jpg" width="220" alt="PokeAPI Response" /> | HTTP 200 OK response from public API forwarded intact over the local Bluetooth link. |
 | **SSRF Mitigation (Private IP Blocked)** | <img src="docs/capturas/parte1/06_web_proxy_relay_respuesta_ipprivada_prohibida.jpg" width="220" alt="SSRF Protection" /> | Strict security enforcement rejecting requests targeting private/internal network addresses (SSRF prevention). |
 
-### Part 2: Cyber Breach Video Game
-*(Screenshots for 1v1 Bluetooth duel and combat sensor controls in staging)*
-1. **Bluetooth Multiplayer Lobby:** Role selection dialog (Host / Join) with paired Bluetooth devices list.
-2. **1v1 Synchronized Turn Banner:** 8×8 grid showing top HUD banner `🟢 YOUR TURN TO STRIKE!` and opponent status.
-3. **Gyroscope Aiming Reticle:** Cyan crosshair highlight on targeted enemy grid cell with coordinates in HUD.
-4. **Kinetic Shake Recharge:** HUD indicator displaying `Kinetic Recharge: +5 EN` and active 15s cooldown timer.
+### Part 2: Cyber Breach Video Game — Real Comparative Evidence (Host vs Client)
+
+Real-device physical testing over bidirectional **Android ↔ Android** Bluetooth RFCOMM without Wi-Fi or Firebase dependencies:
+- **Host Device:** Samsung Galaxy A54 (`Android 14+`)
+- **Client Device:** HONOR Magic 7 Pro (`MagicOS / Android 14+`)
+
+| P2P Match Stage | Host (Samsung Galaxy A54) | Client (HONOR Magic 7 Pro) | Practica 6 Requirement Fulfilled |
+| :--- | :---: | :---: | :--- |
+| **1. Bluetooth P2P Lobby & Role Selection** | <img src="docs/capturas/parte2/01_bluetooth_lobby_host_a54.jpg" width="210" alt="Host Lobby A54" /> | <img src="docs/capturas/parte2/02_bluetooth_lobby_cliente_honor.jpg" width="210" alt="Client Lobby HONOR" /> | **Pairing, Permissions & Roles:** Host binds RFCOMM `BluetoothServerSocket` on dedicated UUID; Client enumerates paired peers after granting `BLUETOOTH_CONNECT` and taps `UNIRSE`. |
+| **2. Handshake & Turn Synchronization** | <img src="docs/capturas/parte2/03_conexion_exitosa_host_a54.jpg" width="210" alt="Host Connected" /> | <img src="docs/capturas/parte2/04_conexion_exitosa_cliente_honor.jpg" width="210" alt="Client Connected" /> | **Strict Turn Enforcement:** Host confirms peer connection and gets green `¡TU TURNO DE ATACAR!` banner; Client locks input displaying `⏳ TURNO DEL CONTRINCANTE`. |
+| **3. Defense Grids & Packet Synchronization** | <img src="docs/capturas/parte2/05_red_defensa_host_a54.jpg" width="210" alt="Host Defense Grid" /> | <img src="docs/capturas/parte2/06_red_defensa_cliente_honor.jpg" width="210" alt="Client Defense Grid" /> | **Sequential Packet Protocol (`seq`):** Bidirectional attack/defense exchange (`H1`, `C3`, `G3`) updated live across `TU RED (DEFENSA)` grids and battle console logs. |
+
+#### 🎥 Hardware Sensors Combat Video (Optional Gyroscope + Touch Mode)
+- **Video File:** [`docs/capturas/parte2/07_video_sensores_combate_cyber_breach.mp4`](docs/capturas/parte2/07_video_sensores_combate_cyber_breach.mp4)
+- **Physical Device Verification (Samsung A54):**
+  1. Begins in **Direct Touch Mode** (`[Activar Giroscopio]`).
+  2. Toggles **`Giroscopio: ACTIVO`**, smoothly gliding the cyan aiming reticle across the 8×8 grid via low-pass filtered tilt (`C3 → A4 → B2 → F1 → D7 → H4`) and firing via **`Disparar Mira`**.
+  3. Cleanly toggles gyroscope off back into touch control, striking an enemy node directly (`E3`: `+10 EN`).
+
+#### 📡 Transport & Hardware Pair Compatibility Matrix
+| Hardware Pair | Transport Layer | Tested Roles | Status | Technical Notes |
+| :--- | :--- | :--- | :---: | :--- |
+| **Samsung A54 (Android) ↔ HONOR Magic 7 Pro (Android)** | Bluetooth Classic RFCOMM (SPP UUID) | Bidirectional Host ↔ Client | **VERIFIED** | Pure offline P2P communication. Runtime Android 12+ (`BLUETOOTH_CONNECT`/`SCAN`) permissions requested cleanly. |
+| **Android ↔ PC / Laptop** | System OPP (`Intent.ACTION_SEND`) | Sender (Android) → Receiver (PC) | **VERIFIED** | Real JPG file transfer via Android native Bluetooth dispatcher in Part 1. |
+| **Android ↔ iOS (iPhone)** | RFCOMM vs CoreBluetooth (BLE GATT) | — | **UNVERIFIED** | Explicitly declared per Practica 6 guidelines: iOS restricts open SPP/RFCOMM to MFi accessories; Android–iOS interoperability requires BLE GATT bridging. |
 
 ---
 
